@@ -63,3 +63,5 @@ media/
 # Static files
 staticfiles/
 
+#venv
+venv/
