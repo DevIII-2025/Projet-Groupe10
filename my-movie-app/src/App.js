@@ -6,6 +6,7 @@ function App() {
   const [description, setDescription] = useState("");
   const [releaseYear, setReleaseYear] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [posterUrl, setPosterUrl] = useState("");
 
 
   useEffect(() => {
@@ -46,7 +47,7 @@ function App() {
         description,
         release_year: releaseYear,
         genre: "Science-fiction",
-        poster_url: "https://example.com/poster.jpg"
+        poster_url: posterUrl
       }),
     })
       .then(response => response.json())
@@ -90,8 +91,7 @@ function App() {
       {/* Titre */}
       <h1 className="text-4xl font-bold text-blue-600 mb-4">Films disponibles</h1>
 
-      <button className="bg-red-500 text-white px-4 py-2 rounded mt-4">Bouton Test Rouge</button>
-
+      {/* Bouton de tri */}
       <button
         className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700 mb-4"
         onClick={sortMovies}
@@ -114,9 +114,12 @@ function App() {
           .filter(movie => movie.title.toLowerCase().includes(searchQuery.toLowerCase()))
           .map((movie, index) => (
             <div>
-              <li key={`${movie.id}-${index}`} className="border-b last:border-none py-4">
-                <strong className="text-lg">{movie.title}</strong> - {movie.release_year}
-                <p className="text-gray-600">{movie.description}</p>
+              <li key={`${movie.id}-${index}`} className="border-b last:border-none py-4 flex items-center">
+                <img src={movie.poster_url} alt={movie.title} className="w-20 h-30 object-cover mr-4" />
+                <div>
+                  <strong className="text-lg">{movie.title}</strong> - {movie.release_year} ({movie.genre})
+                  <p className="text-gray-600">{movie.description}</p>
+                </div>
               </li>
               {/* <li key={movie.id} className="border-b last:border-none py-4 flex justify-between items-center">
               <div>
@@ -161,6 +164,14 @@ function App() {
             placeholder="Année de sortie"
             value={releaseYear}
             onChange={(e) => setReleaseYear(e.target.value)}
+            required
+            className="border p-2 w-full rounded"
+          />
+          <input
+            type="text"
+            placeholder="URL de l'affiche"
+            value={posterUrl}
+            onChange={(e) => setPosterUrl(e.target.value)}
             required
             className="border p-2 w-full rounded"
           />
