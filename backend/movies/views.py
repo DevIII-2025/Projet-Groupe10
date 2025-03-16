@@ -1,6 +1,6 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .tmdb import get_popular_movies
+from .tmdb import discover_movies
 from rest_framework import status
 from .models import Movie, Review, FavoriteMovie, MovieList
 from .serializers import MovieSerializer, ReviewSerializer, FavoriteMovieSerializer, MovieListSerializer
@@ -22,5 +22,5 @@ def movie_list(request):
 
 @api_view(['GET'])
 def tmdb_popular_movies(request):
-    movies = get_popular_movies()
+    movies = discover_movies(page=1)
     return Response(movies)
