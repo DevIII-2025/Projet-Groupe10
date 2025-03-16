@@ -1,6 +1,6 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .tmdb import discover_movies
+from .tmdb import discover_movies, get_movie_details
 from rest_framework import status
 from .models import Movie, Review, FavoriteMovie, MovieList
 from .serializers import MovieSerializer, ReviewSerializer, FavoriteMovieSerializer, MovieListSerializer
@@ -24,3 +24,10 @@ def movie_list(request):
 def tmdb_popular_movies(request):
     movies = discover_movies(page=1)
     return Response(movies)
+
+@api_view(['GET'])
+def movie_details(request, movie_id):
+    movie = get_movie_details(movie_id)
+    if movie:
+        return Response(movie)
+    return Response({"error": "Movie not found"}, status=status.HTTP_404_NOT_FOUND)
