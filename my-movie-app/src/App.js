@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import MovieList from "./components/MovieList";  // Import du composant TMDB
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import MovieDetails from "./components/MovieDetails"; // ton nouveau composant
+import Home from './components/Home';
+
 
 function App() {
   const [movies, setMovies] = useState([]);
@@ -94,6 +98,14 @@ function App() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full p-2 border rounded mb-4"
           />
+
+          {/* movie details */}
+          <Router>
+            <Routes>
+              <Route path="/" element={<Home />} />  {/* ton composant existant qui affiche la liste */}
+              <Route path="/movies/:id" element={<MovieDetails />} />
+            </Routes>
+          </Router>
 
           {/* Liste des films */}
           <ul className="w-3/4 bg-white shadow-md rounded-lg p-4">

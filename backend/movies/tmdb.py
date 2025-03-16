@@ -16,3 +16,10 @@ def discover_movies(page=1):
     if response.status_code == 200:
         return response.json()['results']
     return []
+
+def get_movie_details(movie_id):
+    url = f"{BASE_URL}/movie/{movie_id}"
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    return None
