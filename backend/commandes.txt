@@ -1,1 +1,8 @@
 python -m pip install requests
+
+# bibliothèque pour la clé dans le fichier env
+pip install python-dotenv
+
+# lancer l'import de films 
+python manage.py import_tmdb_movies
+
