@@ -1,3 +1,12 @@
+# créer environnement virtuel
+python3 -m venv venv
+
+# activer environnement virtuel
+# linux
+source venv/bin/activate 
+# windows
+venv\\Scripts\\activate
+
 # installer les requirements
 pip install -r requirements.txt
 
