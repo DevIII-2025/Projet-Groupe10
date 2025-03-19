@@ -4,3 +4,9 @@ npm install react-router-dom
 # librairie modals
 npm install react-modal
 
+
+# pour merge de la branche dev à master (d'un certain commit de la branche dev)
+git log --oneline dev
+git checkout master
+git cherry-pick nom du commit
+git push origin master
