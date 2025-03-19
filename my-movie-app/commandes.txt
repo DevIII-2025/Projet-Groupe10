@@ -1,0 +1,6 @@
+# Ajouter une route React
+npm install react-router-dom
+
+# librairie modals
+npm install react-modal
+
