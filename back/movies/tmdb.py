@@ -6,7 +6,7 @@ BASE_URL = "https://api.themoviedb.org/3"
 
 headers = {
     "accept": "application/json",
-    "Authorization": f"Bearer {settings.TMDB_API_KEY}"
+    "Authorization": f"Bearer {settings.TMDB_API_TOKEN}"
 }
 
 def discover_movies(page=1):
