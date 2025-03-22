@@ -4,7 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MovieDetails from "./components/MovieDetails"; // ton nouveau composant
 import Home from './components/Home';
 import Modal from 'react-modal';
-
+import Login from './components/Login';
+import PrivateRoute from './components/PrivateRoute';
 Modal.setAppElement('#root');
 
 
@@ -20,7 +21,16 @@ function App() {
   const [selectedMovie, setSelectedMovie] = useState(null);
 
   useEffect(() => {
+<<<<<<< HEAD
     fetch("http://127.0.0.1:8000/api/movies/")
+=======
+    console.log("Token utilisé : ", localStorage.getItem('token'));
+    fetch("http://127.0.0.1:8000/api/movies/", {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+>>>>>>> dev
       .then(response => response.json())
       .then(data => {
         console.log("✅ Films reçus depuis l'API :", data);
@@ -123,6 +133,15 @@ function App() {
           {/* movie details */}
           <Router>
             <Routes>
+<<<<<<< HEAD
+=======
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={
+                <PrivateRoute>
+                  <MovieList />
+                </PrivateRoute>
+              } />
+>>>>>>> dev
               <Route path="/" element={<Home />} />  {/* ton composant existant qui affiche la liste */}
               <Route path="/movies/:id" element={<MovieDetails />} />
             </Routes>
