@@ -69,4 +69,9 @@ staticfiles/
 =======
 #venv
 venv/
+<<<<<<< HEAD
+>>>>>>> dev
+=======
+
+# commentaire bidon
 >>>>>>> dev
