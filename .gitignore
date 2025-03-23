@@ -65,13 +65,5 @@ media/
 # Static files
 staticfiles/
 
-<<<<<<< HEAD
-=======
 #venv
 venv/
-<<<<<<< HEAD
->>>>>>> dev
-=======
-
-# commentaire bidon
->>>>>>> dev
