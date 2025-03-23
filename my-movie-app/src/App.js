@@ -15,8 +15,9 @@ function App() {
   const [showPopular, setShowPopular] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState(null);
-  const [showLikedMovies, setShowLikedMovies] = useState(false);
+  const [viewMode, setViewMode] = useState('all'); // 'all', 'liked', ou 'watchlist'
   const [likedMovies, setLikedMovies] = useState([]);
+  const [watchlistMovies, setWatchlistMovies] = useState([]);
 
   useEffect(() => {
     fetchMovies();
@@ -42,6 +43,17 @@ function App() {
         return prevLikedMovies.filter(m => m.id !== movie.id);
       } else {
         return [...prevLikedMovies, movie];
+      }
+    });
+  };
+
+  const toggleWatchlist = (movie) => {
+    setWatchlistMovies(prevWatchlistMovies => {
+      const isInWatchlist = prevWatchlistMovies.some(m => m.id === movie.id);
+      if (isInWatchlist) {
+        return prevWatchlistMovies.filter(m => m.id !== movie.id);
+      } else {
+        return [...prevWatchlistMovies, movie];
       }
     });
   };
@@ -81,7 +93,11 @@ function App() {
     setMovies(sortedMovies);
   };
 
-  const displayedMovies = showLikedMovies ? likedMovies : movies;
+  const displayedMovies = {
+    all: movies,
+    liked: likedMovies,
+    watchlist: watchlistMovies
+  }[viewMode];
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
@@ -89,29 +105,40 @@ function App() {
       <div className="w-full flex justify-center mb-8">
         <button
           className={`px-6 py-2 mx-2 rounded ${
-            !showLikedMovies 
+            viewMode === 'all'
               ? "bg-blue-600 text-white" 
               : "bg-gray-700 text-gray-300"
           }`}
-          onClick={() => setShowLikedMovies(false)}
+          onClick={() => setViewMode('all')}
         >
           Tous les Films
         </button>
         <button
           className={`px-6 py-2 mx-2 rounded ${
-            showLikedMovies 
+            viewMode === 'liked'
               ? "bg-blue-600 text-white" 
               : "bg-gray-700 text-gray-300"
           }`}
-          onClick={() => setShowLikedMovies(true)}
+          onClick={() => setViewMode('liked')}
         >
           Films Likés
+        </button>
+        <button
+          className={`px-6 py-2 mx-2 rounded ${
+            viewMode === 'watchlist'
+              ? "bg-blue-600 text-white" 
+              : "bg-gray-700 text-gray-300"
+          }`}
+          onClick={() => setViewMode('watchlist')}
+        >
+          Enregisté
         </button>
       </div>
 
       {/* Titre */}
       <h1 className="text-4xl font-bold text-blue-400 mb-4">
-        {showLikedMovies ? "Films Likés" : "Films disponibles"}
+        {viewMode === 'all' ? "Films disponibles" : 
+         viewMode === 'liked' ? "Films Likés" : "Enregisté"}
       </h1>
 
       {/* Bouton de tri */}
@@ -145,23 +172,36 @@ function App() {
                     <p className="text-gray-300">{movie.description}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => toggleLike(movie)}
-                  className={`px-4 py-2 rounded ${
-                    likedMovies.some(m => m.id === movie.id)
-                      ? "bg-red-600 hover:bg-red-700"
-                      : "bg-gray-600 hover:bg-gray-700"
-                  }`}
-                >
-                  {likedMovies.some(m => m.id === movie.id) ? "❤️" : "🤍"}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => toggleLike(movie)}
+                    className={`px-4 py-2 rounded ${
+                      likedMovies.some(m => m.id === movie.id)
+                        ? "bg-red-600 hover:bg-red-700"
+                        : "bg-gray-600 hover:bg-gray-700"
+                    }`}
+                  >
+                    {likedMovies.some(m => m.id === movie.id) ? "❤️" : "🤍"}
+                  </button>
+                  <button
+                    onClick={() => toggleWatchlist(movie)}
+                    className={`px-4 py-2 rounded ${
+                      watchlistMovies.some(m => m.id === movie.id)
+                        ? "bg-yellow-600 hover:bg-yellow-700"
+                        : "bg-gray-600 hover:bg-gray-700"
+                    }`}
+                    title={watchlistMovies.some(m => m.id === movie.id) ? "Retirer de la watchlist" : "Ajouter à la watchlist"}
+                  >
+                    {watchlistMovies.some(m => m.id === movie.id) ? "📺" : "➕"}
+                  </button>
+                </div>
               </li>
             </div>
           ))}
       </ul>
 
       {/* Formulaire d'ajout */}
-      {!showLikedMovies && (
+      {viewMode === 'all' && (
         <form onSubmit={handleSubmit} className="bg-gray-800 shadow-lg rounded-lg p-6 mt-4 w-3/4">
           <h2 className="text-2xl font-semibold text-white mb-4">Ajouter un film</h2>
           <div className="grid grid-cols-3 gap-4">
