@@ -2,12 +2,11 @@
 import requests
 from django.conf import settings
 
-api_key = settings.TMDB_API_KEY
 BASE_URL = "https://api.themoviedb.org/3"
 
 headers = {
     "accept": "application/json",
-    "Authorization": api_key
+    "Authorization": f"Bearer {settings.TMDB_API_TOKEN}"
 }
 
 def discover_movies(page=1):

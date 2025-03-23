@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-9%6v-es02t-b)=xxmxpk!^ym@+_ujle%%vpvy5qyqrigj@j6rs
 load_dotenv()  # Charge les variables depuis .env
 
 # clé api TMDB
-TMDB_API_KEY = os.getenv('TMDB_API_KEY')
+TMDB_API_TOKEN = os.getenv('TMDB_API_TOKEN')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
