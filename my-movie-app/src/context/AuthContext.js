@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { getMe } from "../api/authAPI";
+import { getMe, isAuthenticated } from "../api/authAPI";
 
 const AuthContext = createContext();
 
@@ -9,9 +9,14 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const res = await getMe();
-      setUser(res.data);
-    } catch {
+      if (isAuthenticated()) {
+        const res = await getMe();
+        setUser(res.data);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification de la session:', error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -22,8 +27,15 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, []);
 
+  const value = {
+    user,
+    setUser,
+    loading,
+    isAuthenticated: isAuthenticated()
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
