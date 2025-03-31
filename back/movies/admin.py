@@ -1,10 +1,12 @@
 from django.contrib import admin
-from .models import Movie, Review, MovieList, FavoriteMovie
+from .models import Movie, Review, List, MovieInList, Like, View
 
 admin.site.register(Movie)
 admin.site.register(Review)
-admin.site.register(MovieList)
-admin.site.register(FavoriteMovie)
+admin.site.register(List)
+admin.site.register(MovieInList)
+admin.site.register(Like)
+admin.site.register(View)
 
 # from django.contrib import admin
 # from .models import Movie

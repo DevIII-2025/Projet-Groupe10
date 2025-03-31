@@ -1,9 +1,11 @@
-from django.urls import path
-from .views import movie_list, tmdb_popular_movies, movie_details
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views
+
+router = DefaultRouter()
+router.register(r'movies', views.MovieViewSet, basename='movie')
+router.register(r'lists', views.ListViewSet, basename='list')
 
 urlpatterns = [
-    path('movies/', movie_list),
-    # path('reviews/', add_review),
-    path('movies/popular/', tmdb_popular_movies),
-    path('movies/<int:movie_id>/', movie_details),
+    path('', include(router.urls)),
 ]

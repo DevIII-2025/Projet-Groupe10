@@ -1,10 +1,8 @@
 // src/api/authAPI.js
 import axios from "axios";
+import axiosInstance, { API_URL } from './axiosConfig';
 
-const api = axios.create({
-  baseURL: "http://localhost:8000/api/users/",
-  withCredentials: true, // IMPORTANT pour envoyer les cookies
-});
+const AUTH_URL = 'http://127.0.0.1:8000/api/users';
 
 // Fonction pour rafraîchir le token
 const refreshToken = async () => {
@@ -31,79 +29,56 @@ const refreshToken = async () => {
   }
 };
 
-// Intercepteur pour gérer les erreurs 401 et rafraîchir le token
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // Si l'erreur est 401 et qu'on n'a pas encore essayé de rafraîchir le token
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const newToken = await refreshToken();
-        // Mettre à jour le header Authorization avec le nouveau token
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        // Réessayer la requête originale
-        return api(originalRequest);
-      } catch (refreshError) {
-        return Promise.reject(refreshError);
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
-
-// Intercepteur pour ajouter le token à chaque requête
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('jwt_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
 export const login = async (username, password) => {
   try {
-    const response = await api.post("login/", { username, password });
+    const response = await axiosInstance.post('/users/login/', { 
+      username, 
+      password 
+    });
+    
     // Stocker les tokens
-    if (response.data.access_token) {
-      localStorage.setItem('jwt_token', response.data.access_token);
+    const { access_token, refresh_token } = response.data;
+    if (access_token) {
+      localStorage.setItem('jwt_token', access_token);
     }
-    if (response.data.refresh_token) {
-      localStorage.setItem('refresh_token', response.data.refresh_token);
+    if (refresh_token) {
+      localStorage.setItem('refresh_token', refresh_token);
     }
     return response;
   } catch (error) {
-    console.error('Erreur de connexion:', error.response?.data || error.message);
+    console.error('Error during login:', error.response?.data || error.message);
     throw error;
   }
 };
 
 export const getMe = async () => {
   try {
-    return await api.get("me/");
+    const response = await axiosInstance.get('/users/me/');
+    return response;
   } catch (error) {
-    console.error('Erreur lors de la récupération du profil:', error.response?.data || error.message);
+    console.error('Error fetching user profile:', error.response?.data || error.message);
     throw error;
   }
 };
 
 export const logout = async () => {
   try {
-    const response = await api.post("logout/");
+    const response = await axiosInstance.post('/users/logout/');
     // Supprimer les tokens
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('refresh_token');
     return response;
   } catch (error) {
-    console.error('Erreur lors de la déconnexion:', error.response?.data || error.message);
+    console.error('Error during logout:', error.response?.data || error.message);
+    // Même en cas d'erreur, on supprime les tokens
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('refresh_token');
     throw error;
   }
 };
 
 export const isAuthenticated = () => {
-  return !!localStorage.getItem('jwt_token') && !!localStorage.getItem('refresh_token');
+  const token = localStorage.getItem('jwt_token');
+  const refreshToken = localStorage.getItem('refresh_token');
+  return !!token && !!refreshToken;
 };
