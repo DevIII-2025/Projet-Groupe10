@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.http import JsonResponse
@@ -9,6 +10,20 @@ from .serializers import UserSerializer
 import logging
 
 logger = logging.getLogger(__name__)
+
+class CustomTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        try:
+            response = super().post(request, *args, **kwargs)
+            if response.status_code == 200:
+                logger.info("Token rafraîchi avec succès")
+            return response
+        except Exception as e:
+            logger.error(f"Erreur lors du rafraîchissement du token: {str(e)}")
+            return Response(
+                {"detail": "Token invalide ou expiré"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -62,11 +77,29 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request):
-        response = Response()
-        response.delete_cookie("access_token")
-        response.data = {"message": "Logged out"}
-        return response
+        try:
+            # Récupérer le refresh token depuis le cookie
+            refresh_token = request.COOKIES.get('refresh_token')
+            if refresh_token:
+                # Blacklister le refresh token
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+                logger.info(f"Token blacklisté pour l'utilisateur: {request.user.username}")
+
+            response = Response({"message": "Déconnexion réussie"})
+            # Supprimer les cookies
+            response.delete_cookie("access_token")
+            response.delete_cookie("refresh_token")
+            return response
+        except Exception as e:
+            logger.error(f"Erreur lors de la déconnexion: {str(e)}")
+            return Response(
+                {"detail": "Erreur lors de la déconnexion"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
