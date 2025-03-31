@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import MovieList from "./components/MovieList";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import MovieDetails from "./components/MovieDetails";
 import Modal from 'react-modal';
@@ -7,7 +6,11 @@ import Home from './components/Home';
 import LoginForm from "./components/LoginForm";
 import Register from "./components/Register";
 import LogoutButton from "./components/LogoutButton";
+import Lists from "./components/Lists";
+import ListContent from "./components/ListContent";
+import MovieActions from "./components/MovieActions";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+
 Modal.setAppElement('#root');
 
 function ProtectedApp() {
@@ -18,9 +21,10 @@ function ProtectedApp() {
   const [releaseYear, setReleaseYear] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [posterUrl, setPosterUrl] = useState("");
-  const [showPopular, setShowPopular] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState(null);
+  const [selectedList, setSelectedList] = useState(null);
+  const [showLists, setShowLists] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -87,6 +91,15 @@ function ProtectedApp() {
     setSelectedMovie(null);
   };
 
+  const handleMovieUpdate = (updatedMovie) => {
+    setMovies(movies.map(movie => 
+      movie.id === updatedMovie.id ? updatedMovie : movie
+    ));
+    if (selectedMovie?.id === updatedMovie.id) {
+      setSelectedMovie(updatedMovie);
+    }
+  };
+
   if (loading) return <p>Chargement...</p>;
   if (!user) return <Navigate to="/login" replace />;
 
@@ -103,15 +116,24 @@ function ProtectedApp() {
           </div>
         </div>
 
-        <button
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700 mb-4"
-          onClick={() => setShowPopular(!showPopular)}
-        >
-          {showPopular ? "Voir Mes Films Ajoutés" : "Voir Films Populaires (TMDB)"}
-        </button>
+        <div className="flex gap-4 mb-6">
+          <button
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
+            onClick={() => setShowLists(!showLists)}
+          >
+            {showLists ? "Voir Films" : "Voir Mes Listes"}
+          </button>
+        </div>
 
-        {showPopular ? (
-          <MovieList />
+        {showLists ? (
+          selectedList ? (
+            <ListContent
+              list={selectedList}
+              onBack={() => setSelectedList(null)}
+            />
+          ) : (
+            <Lists onSelectList={setSelectedList} />
+          )
         ) : (
           <>
             <button
@@ -168,24 +190,27 @@ function ProtectedApp() {
         <Modal
           isOpen={modalIsOpen}
           onRequestClose={closeModal}
-          className="bg-white p-6 rounded-lg shadow-lg mx-auto mt-20 outline-none"
+          className="bg-white p-6 rounded-lg shadow-lg mx-auto mt-20 outline-none max-w-2xl"
           overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start"
         >
           {selectedMovie ? (
             <>
-              <h2 className="text-2xl font-bold mb-4">{selectedMovie.title}</h2>
-              <img src={selectedMovie.poster_url} alt={selectedMovie.title} className="mb-4" />
-              <p className="mb-2">{selectedMovie.description}</p>
-              <p className="mb-2"><strong>Genre :</strong> {selectedMovie.genre}</p>
-              <p className="mb-4"><strong>Année :</strong> {selectedMovie.release_year}</p>
-              <button onClick={closeModal} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Fermer</button>
+              <div className="flex gap-6">
+                <img src={selectedMovie.poster_url} alt={selectedMovie.title} className="w-48 h-72 object-cover rounded" />
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold mb-4">{selectedMovie.title}</h2>
+                  <p className="mb-2">{selectedMovie.description}</p>
+                  <p className="mb-2"><strong>Genre :</strong> {selectedMovie.genre}</p>
+                  <p className="mb-4"><strong>Année :</strong> {selectedMovie.release_year}</p>
+                  <MovieActions movie={selectedMovie} onUpdate={handleMovieUpdate} />
+                </div>
+              </div>
+              <button onClick={closeModal} className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Fermer</button>
             </>
           ) : (
             <p>Chargement...</p>
           )}
         </Modal>
-
-        <p className="test mt-6">Texte de test en rouge</p>
       </div>
     </div>
   );
