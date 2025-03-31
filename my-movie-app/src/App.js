@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import MovieList from "./components/MovieList";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import MovieDetails from "./components/MovieDetails";
 import Modal from 'react-modal';
 import Home from './components/Home';
 import LoginForm from "./components/LoginForm";
+import Register from "./components/Register";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 Modal.setAppElement('#root');
 
@@ -86,7 +87,17 @@ function ProtectedApp() {
   };
 
   if (loading) return <p>Chargement...</p>;
-  if (!user) return <LoginForm />;
+  if (!user) {
+    return (
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="*" element={<Navigate to="/register" replace />} />
+        </Routes>
+      </Router>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-gray-800 p-4">
