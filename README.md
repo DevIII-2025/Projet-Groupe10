@@ -9,6 +9,9 @@ git checkout dev
 <!-- on crée un venv dans le dossier back/ pour éviter les conflits (seulement les projets en python) -->
 
 cd back
+<!-- (sous linux et mac) -->
+python3 -m venv venv
+<!-- (sous windows) -->
 python -m venv venv
 
 <!-- on active le venv (sous window) -->
@@ -22,6 +25,7 @@ on commence par les requirements -->
 pip install -r requirements.txt
 
 <!-- on crée la DB -->
+python manage.py makemigrations
 python manage.py migrate
 
 <!-- on crée un nouveau fichier qui s'appelle .env (toujours dans back/) et on ajoute le token api qu'il faut récupérer sur le site tmdb --> 
