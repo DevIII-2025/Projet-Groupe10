@@ -1,6 +1,9 @@
 # Node modules
 node_modules/
 
+
+migrations/
+
 # Build directories
 build/
 dist/
@@ -28,6 +31,7 @@ jspm_packages/
 
 # dotenv environment variables file
 .env
+.env_dev
 .env.local
 .env.development.local
 .env.test.local
@@ -55,6 +59,7 @@ Thumbs.db
 __pycache__/
 local_settings.py
 db.sqlite3
+db_dev.sqlite3
 db.sqlite3-journal
 
 # Media files
