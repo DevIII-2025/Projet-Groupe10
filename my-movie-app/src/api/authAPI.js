@@ -2,7 +2,15 @@
 import axios from "axios";
 import axiosInstance, { API_URL } from './axiosConfig';
 
-const AUTH_URL = 'http://127.0.0.1:8000/api/users';
+// import React from 'react';
+// import dotenv from 'dotenv';
+// import { config } from 'dotenv';
+// config({ path: '.env' });
+// const BACKEND_URL = process.env.BACKEND_URL;
+
+const BACKEND_URL = 'http://localhost:8000';
+
+const AUTH_URL = BACKEND_URL + '/api/users';
 
 // Fonction pour rafraîchir le token
 const refreshToken = async () => {

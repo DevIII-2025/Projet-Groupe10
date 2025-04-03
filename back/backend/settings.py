@@ -35,11 +35,9 @@ print("current_branch:",current_branch)
 
 # Chargement des variables d'environnement
 if current_branch == "dev":
-    load_dotenv(BASE_DIR / ".env_dev")
+    load_dotenv(BASE_DIR / ".env.dev")
 else:
     load_dotenv(BASE_DIR / ".env")
-
-
 
 
 # Clé secrète Django (ne jamais exposer en prod)
@@ -48,6 +46,10 @@ SECRET_KEY = 'django-insecure-9%6v-es02t-b)=xxmxpk!^ym@+_ujle%%vpvy5qyqrigj@j6rs
 # Clé API TMDB depuis .env
 TMDB_API_TOKEN = os.getenv('TMDB_API_TOKEN')
 DATABASE_NAME = os.getenv('DATABASE_NAME')
+BACKEND_URL = os.getenv('BACKEND_URL')
+
+print("BACKEND_URL:",BACKEND_URL)
+
 
 # DEBUG à désactiver en prod
 DEBUG = True

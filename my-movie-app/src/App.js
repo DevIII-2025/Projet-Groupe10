@@ -11,6 +11,16 @@ import ListContent from "./components/ListContent";
 import MovieActions from "./components/MovieActions";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
+
+// import React from 'react';
+// // import dotenv from 'dotenv';
+// // import { config } from 'dotenv';
+// // config({ path: '.env' });
+// const BACKEND_URL = process.env.BACKEND_URL;
+
+const BACKEND_URL = 'http://localhost:8000';
+
+
 Modal.setAppElement('#root');
 
 function ProtectedApp() {
@@ -28,7 +38,7 @@ function ProtectedApp() {
 
   useEffect(() => {
     if (!user) return;
-    fetch("http://127.0.0.1:8000/api/movies/", {
+    fetch(BACKEND_URL + "/api/movies/", {
       credentials: "include"
     })
       .then(response => response.json())
@@ -47,7 +57,7 @@ function ProtectedApp() {
       alert("❌ Ce film existe déjà !");
       return;
     }
-    fetch("http://127.0.0.1:8000/api/movies/", {
+    fetch(BACKEND_URL + "/api/movies/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -77,7 +87,7 @@ function ProtectedApp() {
   };
 
   const openModal = (movieId) => {
-    fetch(`http://127.0.0.1:8000/api/movies/${movieId}/`, { credentials: "include" })
+    fetch(BACKEND_URL + "/api/movies/${movieId}/", { credentials: "include" })
       .then(response => response.json())
       .then(data => {
         setSelectedMovie(data);
