@@ -11,15 +11,7 @@ import ListContent from "./components/ListContent";
 import MovieActions from "./components/MovieActions";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
-
-// import React from 'react';
-// // import dotenv from 'dotenv';
-// // import { config } from 'dotenv';
-// // config({ path: '.env' });
-// const BACKEND_URL = process.env.BACKEND_URL;
-
-const BACKEND_URL = 'http://localhost:8000';
-
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 Modal.setAppElement('#root');
 
@@ -87,7 +79,7 @@ function ProtectedApp() {
   };
 
   const openModal = (movieId) => {
-    fetch(BACKEND_URL + "/api/movies/${movieId}/", { credentials: "include" })
+    fetch(BACKEND_URL + "/api/movies/" + movieId +"/", { credentials: "include" })
       .then(response => response.json())
       .then(data => {
         setSelectedMovie(data);
