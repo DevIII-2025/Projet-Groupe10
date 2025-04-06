@@ -11,8 +11,15 @@ import subprocess
 from datetime import timedelta
 from dotenv import load_dotenv
 
+# Load environment variables
+load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Get environment variables
+DATABASE_NAME = os.getenv('DATABASE_NAME', 'db.sqlite3')
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 # Function to get the current Git branch
 def get_current_git_branch():
@@ -45,14 +52,10 @@ SECRET_KEY = 'django-insecure-9%6v-es02t-b)=xxmxpk!^ym@+_ujle%%vpvy5qyqrigj@j6rs
 
 # Clé API TMDB depuis .env
 TMDB_API_TOKEN = os.getenv('TMDB_API_TOKEN')
-DATABASE_NAME = os.getenv('DATABASE_NAME')
 BACKEND_URL = os.getenv('BACKEND_URL')
 
 print("BACKEND_URL:",BACKEND_URL)
 
-
-# DEBUG à désactiver en prod
-DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -88,7 +91,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Pour permettre à React d’accéder à l’API (à restreindre en prod)
+# Pour permettre à React d'accéder à l'API (à restreindre en prod)
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Ton frontend React
