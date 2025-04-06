@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Modal from 'react-modal';
 import MovieActions from './MovieActions';
+import axiosInstance from '../api/axiosConfig';
 
 // Configuration du modal
 Modal.setAppElement('#root');
@@ -31,21 +32,16 @@ export default function MovieList() {
   const [modalIsOpen, setModalIsOpen] = useState(false);
 
   useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const response = await axiosInstance.get("/movies/");
+        setMovies(response.data);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des films:", error);
+      }
+    };
     fetchMovies();
   }, []);
-
-  const fetchMovies = async () => {
-    try {
-      const res = await fetch("http://127.0.0.1:8000/api/movies/");
-      if (!res.ok) {
-        throw new Error("Erreur lors du chargement des films");
-      }
-      const data = await res.json();
-      setMovies(data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const openModal = (movie) => {
     console.log("Film sélectionné :", movie);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../api/axiosConfig';
 
 const RegisterForm = () => {
     const navigate = useNavigate();
@@ -26,12 +26,13 @@ const RegisterForm = () => {
         setSuccess('');
 
         try {
-            const response = await axios.post('http://localhost:8000/api/users/register/', formData);
+            await axiosInstance.post('/users/register/', formData);
             setSuccess('Inscription réussie ! Redirection...');
             setTimeout(() => {
                 navigate('/login');
             }, 2000);
         } catch (err) {
+            console.error('Erreur lors de l\'inscription:', err);
             if (err.response) {
                 // Le serveur a répondu avec un statut d'erreur
                 const errorData = err.response.data;
