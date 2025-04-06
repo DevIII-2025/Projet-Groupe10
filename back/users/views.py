@@ -1,3 +1,5 @@
+# users/views.py
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
@@ -5,8 +7,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from django.http import JsonResponse
-from .serializers import UserSerializer
+from .serializers import RegisterSerializer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,6 @@ class LoginView(APIView):
 
         logger.info(f"Tentative de connexion pour: {username_or_email}")
 
-        # Vérifier si c'est un email
         try:
             user = User.objects.get(email=username_or_email)
             username = user.username
@@ -46,8 +46,7 @@ class LoginView(APIView):
         if user:
             logger.info(f"Connexion réussie pour l'utilisateur: {user.username}")
             refresh = RefreshToken.for_user(user)
-            
-            # Créer la réponse avec le token
+
             response_data = {
                 "message": "Login successful",
                 "access_token": str(refresh.access_token),
@@ -64,33 +63,29 @@ class LoginView(APIView):
                 key="access_token",
                 value=str(refresh.access_token),
                 httponly=True,
-                secure=False,  # met à True en prod avec HTTPS
+                secure=False,
                 samesite='Lax'
             )
             return response
-        
+
         logger.warning(f"Échec de la connexion pour: {username_or_email}")
         return Response(
             {"detail": "Invalid credentials"}, 
             status=status.HTTP_401_UNAUTHORIZED
         )
 
-
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         try:
-            # Récupérer le refresh token depuis le cookie
             refresh_token = request.COOKIES.get('refresh_token')
             if refresh_token:
-                # Blacklister le refresh token
                 token = RefreshToken(refresh_token)
                 token.blacklist()
                 logger.info(f"Token blacklisté pour l'utilisateur: {request.user.username}")
 
             response = Response({"message": "Déconnexion réussie"})
-            # Supprimer les cookies
             response.delete_cookie("access_token")
             response.delete_cookie("refresh_token")
             return response
@@ -111,7 +106,7 @@ class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
+        serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
@@ -120,7 +115,7 @@ class RegisterView(APIView):
                 key="access_token",
                 value=str(refresh.access_token),
                 httponly=True,
-                secure=False,  # met à True en prod avec HTTPS
+                secure=False,
                 samesite='Lax'
             )
             response.data = {
