@@ -1,6 +1,5 @@
 // src/api/authAPI.js
-import axios from "axios";
-import axiosInstance, { API_URL } from './axiosConfig';
+import axiosInstance from './axiosConfig';
 
 // import React from 'react';
 // import dotenv from 'dotenv';
@@ -8,42 +7,15 @@ import axiosInstance, { API_URL } from './axiosConfig';
 // config({ path: '.env' });
 // const BACKEND_URL = process.env.BACKEND_URL;
 
-const BACKEND_URL = 'http://localhost:8000';
-
-const AUTH_URL = BACKEND_URL + '/api/users';
-
-// Fonction pour rafraîchir le token
-const refreshToken = async () => {
-  try {
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
-    }
-
-    const response = await axios.post('http://localhost:8000/api/users/token/refresh/', {
-      refresh: refreshToken
-    });
-
-    const { access } = response.data;
-    localStorage.setItem('jwt_token', access);
-    return access;
-  } catch (error) {
-    console.error('Error refreshing token:', error);
-    // Si le refresh échoue, on déconnecte l'utilisateur
-    localStorage.removeItem('jwt_token');
-    localStorage.removeItem('refresh_token');
-    window.location.href = '/login';
-    throw error;
-  }
-};
-
 export const login = async (username, password) => {
   try {
+    console.log('Attempting login...');
     const response = await axiosInstance.post('/users/login/', { 
       username, 
       password 
     });
     
+    console.log('Login successful, storing tokens...');
     // Stocker les tokens
     const { access_token, refresh_token } = response.data;
     if (access_token) {
@@ -54,14 +26,16 @@ export const login = async (username, password) => {
     }
     return response;
   } catch (error) {
-    console.error('Error during login:', error.response?.data || error.message);
+    console.error('Login error:', error.response?.data || error.message);
     throw error;
   }
 };
 
 export const getMe = async () => {
   try {
+    console.log('Fetching user profile...');
     const response = await axiosInstance.get('/users/me/');
+    console.log('User profile fetched successfully');
     return response;
   } catch (error) {
     console.error('Error fetching user profile:', error.response?.data || error.message);
@@ -71,13 +45,15 @@ export const getMe = async () => {
 
 export const logout = async () => {
   try {
+    console.log('Attempting logout...');
     const response = await axiosInstance.post('/users/logout/');
+    console.log('Logout successful, removing tokens...');
     // Supprimer les tokens
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('refresh_token');
     return response;
   } catch (error) {
-    console.error('Error during logout:', error.response?.data || error.message);
+    console.error('Logout error:', error.response?.data || error.message);
     // Même en cas d'erreur, on supprime les tokens
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('refresh_token');

@@ -54,7 +54,12 @@ print("BACKEND_URL:",BACKEND_URL)
 # DEBUG à désactiver en prod
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '149.202.49.197',
+    '192.168.0.10',
+]
 
 # Applications installées
 INSTALLED_APPS = [
@@ -88,15 +93,39 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Pour permettre à React d’accéder à l’API (à restreindre en prod)
+# Pour permettre à React d'accéder à l'API (à restreindre en prod)
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Ton frontend React
-    "http://localhost:3001",  # Ton frontend React
+    "http://localhost:3000",  # Frontend React local
+    "http://localhost:3001",  # Frontend React local
+    "http://149.202.49.197:3000",  # Frontend React sur le serveur
+    "http://149.202.49.197:8000",  # Backend sur le serveur
+    "http://192.168.0.10:3000",  # Backend sur le serveur
 ]
 
-CORS_ALLOW_CREDENTIALS = True  # ⚠️ Important pour autoriser les cookies
+CORS_ALLOW_CREDENTIALS = True  # Important pour autoriser les cookies
 
+# Configuration supplémentaire pour CORS
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Authentification REST avec JWT
 REST_FRAMEWORK = {

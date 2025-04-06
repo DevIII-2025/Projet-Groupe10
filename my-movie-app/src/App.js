@@ -10,8 +10,7 @@ import Lists from "./components/Lists";
 import ListContent from "./components/ListContent";
 import MovieActions from "./components/MovieActions";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+import axiosInstance from './api/axiosConfig';
 
 Modal.setAppElement('#root');
 
@@ -27,50 +26,83 @@ function ProtectedApp() {
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [selectedList, setSelectedList] = useState(null);
   const [showLists, setShowLists] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!user) return;
-    fetch(BACKEND_URL + "/api/movies/", {
-      credentials: "include"
-    })
-      .then(response => response.json())
-      .then(data => {
-        const uniqueMovies = data.filter((movie, index, self) =>
+    setIsLoading(true);
+    setError(null);
+    axiosInstance.get("/movies/")
+      .then(response => {
+        const uniqueMovies = response.data.filter((movie, index, self) =>
           index === self.findIndex((m) => m.id === movie.id)
         );
         setMovies(uniqueMovies);
       })
-      .catch(error => console.error("Erreur :", error));
+      .catch(error => {
+        console.error("Erreur :", error);
+        setError("Impossible de charger les films. Veuillez réessayer plus tard.");
+      })
+      .finally(() => setIsLoading(false));
   }, [user]);
+
+  const validateForm = () => {
+    if (!title.trim()) {
+      setError("Le titre est requis");
+      return false;
+    }
+    if (!description.trim()) {
+      setError("La description est requise");
+      return false;
+    }
+    if (!releaseYear || isNaN(releaseYear) || releaseYear < 1888 || releaseYear > new Date().getFullYear()) {
+      setError("L'année doit être valide (entre 1888 et l'année actuelle)");
+      return false;
+    }
+    try {
+      new URL(posterUrl);
+    } catch {
+      setError("L'URL de l'affiche doit être valide");
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (movies.some(movie => movie.title === title && movie.release_year === releaseYear)) {
-      alert("❌ Ce film existe déjà !");
+    setError(null);
+    
+    if (!validateForm()) {
       return;
     }
-    fetch(BACKEND_URL + "/api/movies/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: "include",
-      body: JSON.stringify({
-        title,
-        description,
-        release_year: releaseYear,
-        genre: "Science-fiction",
-        poster_url: posterUrl
-      }),
+
+    if (movies.some(movie => movie.title === title && movie.release_year === releaseYear)) {
+      setError("❌ Ce film existe déjà !");
+      return;
+    }
+
+    setIsLoading(true);
+    axiosInstance.post("/movies/", {
+      title,
+      description,
+      release_year: releaseYear,
+      genre: "Science-fiction",
+      poster_url: posterUrl
     })
-      .then(response => response.json())
-      .then(data => {
-        setMovies((prevMovies) => [...prevMovies, data]);
+      .then(response => {
+        setMovies((prevMovies) => [...prevMovies, response.data]);
         setTitle("");
         setDescription("");
         setReleaseYear("");
+        setPosterUrl("");
+        setError(null);
       })
-      .catch(error => console.error("Erreur API:", error.message));
+      .catch(error => {
+        console.error("Erreur API:", error.message);
+        setError("Impossible d'ajouter le film. Veuillez réessayer plus tard.");
+      })
+      .finally(() => setIsLoading(false));
   };
 
   const sortMovies = () => {
@@ -79,10 +111,9 @@ function ProtectedApp() {
   };
 
   const openModal = (movieId) => {
-    fetch(BACKEND_URL + "/api/movies/" + movieId +"/", { credentials: "include" })
-      .then(response => response.json())
-      .then(data => {
-        setSelectedMovie(data);
+    axiosInstance.get(`/movies/${movieId}/`)
+      .then(response => {
+        setSelectedMovie(response.data);
         setModalIsOpen(true);
       })
       .catch(err => console.error(err));
@@ -108,6 +139,18 @@ function ProtectedApp() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-gray-800 p-4">
       <div className="w-full max-w-6xl">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+        
+        {isLoading && (
+          <div className="flex justify-center items-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          </div>
+        )}
+
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-4xl font-bold text-blue-600">Films disponibles</h1>
           <div className="flex items-center gap-4">
@@ -179,12 +222,50 @@ function ProtectedApp() {
             <h2 className="text-2xl font-semibold mt-8">Ajouter un film</h2>
             <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 mt-4 w-3/4">
               <div className="grid grid-cols-3 gap-4">
-                <input type="text" placeholder="Titre" value={title} onChange={(e) => setTitle(e.target.value)} required className="border p-2 w-full rounded" />
-                <input type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} required className="border p-2 w-full rounded" />
-                <input type="number" placeholder="Année de sortie" value={releaseYear} onChange={(e) => setReleaseYear(e.target.value)} required className="border p-2 w-full rounded" />
-                <input type="text" placeholder="URL de l'affiche" value={posterUrl} onChange={(e) => setPosterUrl(e.target.value)} required className="border p-2 w-full rounded" />
+                <input 
+                  type="text" 
+                  placeholder="Titre" 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)} 
+                  required 
+                  className="border p-2 w-full rounded" 
+                  maxLength={200}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Description" 
+                  value={description} 
+                  onChange={(e) => setDescription(e.target.value)} 
+                  required 
+                  className="border p-2 w-full rounded"
+                  maxLength={1000}
+                />
+                <input 
+                  type="number" 
+                  placeholder="Année de sortie" 
+                  value={releaseYear} 
+                  onChange={(e) => setReleaseYear(e.target.value)} 
+                  required 
+                  className="border p-2 w-full rounded"
+                  min={1888}
+                  max={new Date().getFullYear()}
+                />
+                <input 
+                  type="url" 
+                  placeholder="URL de l'affiche" 
+                  value={posterUrl} 
+                  onChange={(e) => setPosterUrl(e.target.value)} 
+                  required 
+                  className="border p-2 w-full rounded"
+                />
               </div>
-              <button type="submit" className="px-6 py-2 bg-blue-500 text-white rounded w-full mt-4">Ajouter</button>
+              <button 
+                type="submit" 
+                className="px-6 py-2 bg-blue-500 text-white rounded w-full mt-4 disabled:opacity-50"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Ajout en cours...' : 'Ajouter'}
+              </button>
             </form>
           </>
         )}
