@@ -10,6 +10,7 @@ import Lists from "./components/Lists";
 import ListContent from "./components/ListContent";
 import MovieActions from "./components/MovieActions";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import EditProfileButton from "./components/EditProfileButton";
 
 
 // import React from 'react';
@@ -122,6 +123,7 @@ function ProtectedApp() {
             <p className="text-sm text-gray-600">
               Connecté en tant que <strong>{user.username}</strong>
             </p>
+            <EditProfileButton />
             <LogoutButton />
           </div>
         </div>
