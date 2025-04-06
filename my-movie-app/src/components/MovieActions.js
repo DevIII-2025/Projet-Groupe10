@@ -8,9 +8,16 @@ const MovieActions = ({ movie, onUpdate }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [movieStatus, setMovieStatus] = useState({
-        is_liked: false,
-        is_viewed: false
+        is_liked: movie?.is_liked || false,
+        is_viewed: movie?.is_viewed || false
     });
+
+    useEffect(() => {
+        setMovieStatus({
+            is_liked: movie?.is_liked || false,
+            is_viewed: movie?.is_viewed || false
+        });
+    }, [movie]);
 
     useEffect(() => {
         fetchLists();
