@@ -88,7 +88,7 @@ function ProtectedApp() {
   };
 
   const openModal = (movieId) => {
-    fetch(BACKEND_URL + "/api/movies/${movieId}/", { credentials: "include" })
+    fetch(BACKEND_URL + `/api/movies/${movieId}/`, { credentials: "include" })
       .then(response => response.json())
       .then(data => {
         setSelectedMovie(data);
