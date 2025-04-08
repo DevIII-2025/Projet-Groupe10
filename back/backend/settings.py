@@ -46,9 +46,9 @@ SECRET_KEY = 'django-insecure-9%6v-es02t-b)=xxmxpk!^ym@+_ujle%%vpvy5qyqrigj@j6rs
 # Clé API TMDB depuis .env
 TMDB_API_TOKEN = os.getenv('TMDB_API_TOKEN')
 DATABASE_NAME = os.getenv('DATABASE_NAME')
-BACKEND_URL = os.getenv('BACKEND_URL')
+# BACKEND_URL = os.getenv('BACKEND_URL')
 
-print("BACKEND_URL:",BACKEND_URL)
+# print("BACKEND_URL:",BACKEND_URL)
 
 
 # DEBUG à désactiver en prod
@@ -58,6 +58,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '149.202.49.197',
+    'ovh2',
     '192.168.0.10',
 ]
 
