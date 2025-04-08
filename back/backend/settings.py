@@ -60,6 +60,7 @@ ALLOWED_HOSTS = [
     '149.202.49.197',
     'ovh2',
     '192.168.0.10',
+    'test.critiq.ovh'
 ]
 
 # Applications installées
