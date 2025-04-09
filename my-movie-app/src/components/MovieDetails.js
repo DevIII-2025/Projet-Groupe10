@@ -10,6 +10,31 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
   const [error, setError] = useState('');
   const { user } = useAuth();
 
+  // Fonction pour générer les étoiles
+  const renderStars = (rating) => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const stars = [];
+
+    // Ajoute les étoiles pleines
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(<span key={`full-${i}`} className="star full">★</span>);
+    }
+
+    // Ajoute une demi-étoile si nécessaire
+    if (hasHalfStar) {
+      stars.push(<span key="half" className="star half">◐</span>);
+    }
+
+    // Ajoute les étoiles vides pour compléter jusqu'à 5
+    const emptyStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(<span key={`empty-${i}`} className="star empty">☆</span>);
+    }
+
+    return stars;
+  };
+
   useEffect(() => {
     const fetchReviews = async () => {
       try {
@@ -43,6 +68,11 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
     }
   };
 
+  // Calcul de la moyenne des notes
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+    : 'Aucune note';
+
   return (
     <div className="movie-details-modal">
       <div className="movie-header">
@@ -57,6 +87,24 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
             <p className="movie-year"><strong>Année :</strong> {movie.release_year}</p>
             <p className="movie-genre"><strong>Genre :</strong> {movie.genre}</p>
             <p className="movie-description">{movie.description}</p>
+            <div className="movie-stats">
+              <div className="average-rating">
+                <span className="rating-label">Note moyenne :</span>
+                <span className="rating-value">
+                  {averageRating !== 'Aucune note' ? (
+                    <>
+                      {averageRating}
+                      <span className="rating-stars">
+                        {renderStars(parseFloat(averageRating))}
+                      </span>
+                      <span className="rating-count">({reviews.length} avis)</span>
+                    </>
+                  ) : (
+                    'Aucune note'
+                  )}
+                </span>
+              </div>
+            </div>
             <div className="movie-actions">
               <MovieActions movie={movie} onUpdate={onUpdate} />
             </div>
@@ -100,19 +148,20 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
               reviews.map(review => (
                 <div key={review.id} className="review">
                   <div className="review-header">
-                    <span className="review-author">{review.user.username}</span>
-                    <span className="review-rating">
-                      {Array.from({ length: review.rating }).map((_, i) => (
-                        <span key={i} className="star">★</span>
-                      ))}
-                    </span>
-                    <span className="review-date">
-                      {new Date(review.created_at).toLocaleDateString()}
-                    </span>
-                    {user && user.id === review.user.id && (
+                    <div className="review-info">
+                      <span className="review-author">{review.user?.username}</span>
+                      <span className="review-rating">
+                        {renderStars(review.rating)}
+                      </span>
+                      <span className="review-date">
+                        {new Date(review.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {user && review.user && user.username === review.user.username && (
                       <button
                         onClick={() => handleDeleteReview(review.id)}
                         className="delete-review"
+                        title="Supprimer le commentaire"
                       >
                         Supprimer
                       </button>

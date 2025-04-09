@@ -89,6 +89,13 @@
   gap: 15px;
   margin-bottom: 10px;
   flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.review-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .review-author {
@@ -107,18 +114,27 @@
 }
 
 .delete-review {
-  background: #dc3545;
+  background-color: #dc3545;
   color: white;
   border: none;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.2s;
 }
 
 .delete-review:hover {
-  background: #c82333;
+  background-color: #c82333;
+}
+
+.delete-review::before {
+  content: "×";
+  font-size: 18px;
+  line-height: 1;
 }
 
 .review-comment {
@@ -305,6 +321,24 @@
 .star {
   color: #ffc107;
   margin-right: 2px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.star.full {
+  color: #ffc107;
+}
+
+.star.half {
+  color: #ffc107;
+  position: relative;
+  display: inline-block;
+  font-size: 16px;
+  vertical-align: middle;
+}
+
+.star.empty {
+  color: #e4e5e9;
 }
 
 .review-date {
@@ -371,4 +405,40 @@
 
 .movie-actions button.view-button:hover {
   background-color: #218838;
+}
+
+.movie-stats {
+  margin: 15px 0;
+  padding: 15px 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.average-rating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rating-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.rating-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.rating-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.rating-count {
+  color: #666;
+  font-size: 14px;
 } 
