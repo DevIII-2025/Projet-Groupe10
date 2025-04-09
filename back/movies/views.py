@@ -10,9 +10,16 @@ from .serializers import (
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 import logging
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
+
+class CustomPagination(PageNumberPagination):
+    page_size = 24  # 4 rows × 6 columns
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 @api_view(['GET', 'POST'])
 def movie_list(request):
@@ -42,9 +49,15 @@ def movie_details(request, movie_id):
     return Response({"error": "Movie not found"}, status=status.HTTP_404_NOT_FOUND)
 
 class MovieViewSet(viewsets.ModelViewSet):
-    queryset = Movie.objects.all()
     serializer_class = MovieSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        queryset = Movie.objects.all().order_by('-created_at')
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            queryset = queryset.filter(title__icontains=search_query)
+        return queryset
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -53,6 +66,24 @@ class MovieViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['post'])
     def like(self, request, pk=None):
