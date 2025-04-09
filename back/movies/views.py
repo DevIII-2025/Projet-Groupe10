@@ -65,7 +65,10 @@ class MovieViewSet(viewsets.ModelViewSet):
         return context
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        if self.request.user.is_authenticated:
+            serializer.save(created_by=self.request.user)
+        else:
+            serializer.save(created_by=None)
 
     def list(self, request, *args, **kwargs):
         try:

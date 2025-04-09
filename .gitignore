@@ -69,3 +69,6 @@ staticfiles/
 venv/
 
 # re test comment bidon
+back/db_dev.sqlite3
+my-movie-app/.env.dev
+back/.env.dev
