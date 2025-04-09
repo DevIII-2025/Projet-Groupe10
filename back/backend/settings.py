@@ -54,14 +54,16 @@ DATABASE_NAME = os.getenv('DATABASE_NAME')
 # DEBUG à désactiver en prod
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '149.202.49.197',
-    'ovh2',
-    '192.168.0.10',
-    'test.critiq.ovh'
-]
+# ALLOWED_HOSTS = [
+#     'localhost',
+#     '127.0.0.1',
+#     '149.202.49.197',
+#     'ovh2',
+#     '192.168.0.10',
+#     'test.critiq.ovh'
+# ]
+
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
 # Applications installées
 INSTALLED_APPS = [
@@ -97,14 +99,19 @@ MIDDLEWARE = [
 
 # Pour permettre à React d'accéder à l'API (à restreindre en prod)
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Frontend React local
-    "http://localhost:3001",  # Frontend React local
-    "http://149.202.49.197:3000",  # Frontend React sur le serveur
-    "http://149.202.49.197:8000",  # Backend sur le serveur
-    "http://192.168.0.10:3000",  # Backend sur le serveur
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",  # Frontend React local
+#     "http://localhost:3001",  # Frontend React local
+#     "http://149.202.49.197:3000",  # Frontend React sur le serveur
+#     "http://149.202.49.197:8000",  # Backend sur le serveur
+#     "http://192.168.0.10:3000",  # Backend sur le serveur
+# ]
 
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
+# Optionally, filter out empty strings if any
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS if origin.strip()]
+
+print("CORS_ALLOWED_ORIGINS:",CORS_ALLOWED_ORIGINS)
 CORS_ALLOW_CREDENTIALS = True  # Important pour autoriser les cookies
 
 # Configuration supplémentaire pour CORS
