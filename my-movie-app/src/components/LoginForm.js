@@ -100,7 +100,6 @@ export default function LoginForm() {
           </p>
         </div>
       </div>
-      <p className="mt-6 text-gray-500 text-sm">Accès réservé aux utilisateurs enregistrés 🔒</p>
     </div>
   );
 }
