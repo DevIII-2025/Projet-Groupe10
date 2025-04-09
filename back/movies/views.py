@@ -54,6 +54,61 @@ class MovieViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
+    @action(detail=True, methods=['get'])
+    def reviews(self, request, pk=None):
+        movie = self.get_object()
+        reviews = Review.objects.filter(movie=movie).order_by('-created_at')
+        serializer = ReviewSerializer(reviews, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def add_review(self, request, pk=None):
+        movie = self.get_object()
+        serializer = ReviewSerializer(data=request.data, context={'request': request})
+        
+        if serializer.is_valid():
+            # Vérifier si l'utilisateur a déjà commenté ce film
+            existing_review = Review.objects.filter(user=request.user, movie=movie).first()
+            if existing_review:
+                return Response(
+                    {'error': 'Vous avez déjà commenté ce film'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            serializer.save(user=request.user, movie=movie)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['put'])
+    def update_review(self, request, pk=None):
+        movie = self.get_object()
+        try:
+            review = Review.objects.get(user=request.user, movie=movie)
+            serializer = ReviewSerializer(review, data=request.data, context={'request': request})
+            
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Review.DoesNotExist:
+            return Response(
+                {'error': 'Commentaire non trouvé'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=True, methods=['delete'])
+    def delete_review(self, request, pk=None):
+        movie = self.get_object()
+        try:
+            review = Review.objects.get(user=request.user, movie=movie)
+            review.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Review.DoesNotExist:
+            return Response(
+                {'error': 'Commentaire non trouvé'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
     @action(detail=True, methods=['post'])
     def like(self, request, pk=None):
         movie = self.get_object()
