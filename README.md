@@ -54,3 +54,33 @@ npm install
 npm start
 
 
+-----------------------
+
+A avoir dans ses .env et .env.dev (1 fichier .env et 1 .env.dev côté back et côté front):
+
+Fichier .env (back):
+TMDB_API_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJhdWQ........cflRKPnaInfrZsGErDd7iaQKTKPb_LwIrMBJWAKtcmM
+DEBUG=True
+DATABASE_NAME=db.sqlite3
+ALLOWED_HOSTS=localhost,149.202.49.197
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://149.202.49.197:3000
+
+
+
+Fichier .env.dev (back):
+TMDB_API_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJhdWQiO......cflRKPnaInfrZsGErDd7iaQKTKPb_LwIrMBJWAKtcmM
+DEBUG=True
+DATABASE_NAME=db_dev.sqlite3
+ALLOWED_HOSTS=localhost,149.202.49.197
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://149.202.49.197:3000
+
+
+Fichier .env (front):
+REACT_APP_BACKEND_URL=http://localhost:8000 
+
+
+Fichier .env.dev (front):
+REACT_APP_BACKEND_URL=http://localhost:8000
+
+c'est tout 
+
