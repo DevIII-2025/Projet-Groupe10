@@ -11,15 +11,8 @@ import subprocess
 from datetime import timedelta
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Get environment variables
-DATABASE_NAME = os.getenv('DATABASE_NAME', 'db.sqlite3')
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 # Function to get the current Git branch
 def get_current_git_branch():
@@ -52,12 +45,22 @@ SECRET_KEY = 'django-insecure-9%6v-es02t-b)=xxmxpk!^ym@+_ujle%%vpvy5qyqrigj@j6rs
 
 # Clé API TMDB depuis .env
 TMDB_API_TOKEN = os.getenv('TMDB_API_TOKEN')
-BACKEND_URL = os.getenv('BACKEND_URL')
+DATABASE_NAME = os.getenv('DATABASE_NAME')
+# BACKEND_URL = os.getenv('BACKEND_URL')
 
-print("BACKEND_URL:",BACKEND_URL)
+# print("BACKEND_URL:",BACKEND_URL)
 
 
-ALLOWED_HOSTS = []
+# DEBUG à désactiver en prod
+DEBUG = True
+
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '149.202.49.197',
+    'ovh2',
+    '192.168.0.10',
+]
 
 # Applications installées
 INSTALLED_APPS = [
@@ -94,12 +97,36 @@ MIDDLEWARE = [
 # Pour permettre à React d'accéder à l'API (à restreindre en prod)
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Ton frontend React
-    "http://localhost:3001",  # Ton frontend React
+    "http://localhost:3000",  # Frontend React local
+    "http://localhost:3001",  # Frontend React local
+    "http://149.202.49.197:3000",  # Frontend React sur le serveur
+    "http://149.202.49.197:8000",  # Backend sur le serveur
+    "http://192.168.0.10:3000",  # Backend sur le serveur
 ]
 
-CORS_ALLOW_CREDENTIALS = True  # ⚠️ Important pour autoriser les cookies
+CORS_ALLOW_CREDENTIALS = True  # Important pour autoriser les cookies
 
+# Configuration supplémentaire pour CORS
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Authentification REST avec JWT
 REST_FRAMEWORK = {
