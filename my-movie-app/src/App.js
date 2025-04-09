@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import MovieDetails from "./components/MovieDetails";
 import Modal from 'react-modal';
 import Home from './components/Home';
@@ -13,6 +13,29 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import axiosInstance from './api/axiosConfig';
 
 Modal.setAppElement('#root');
+
+const customStyles = {
+  overlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    zIndex: 1000,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  content: {
+    position: 'relative',
+    top: 'auto',
+    left: 'auto',
+    right: 'auto',
+    bottom: 'auto',
+    maxWidth: '800px',
+    width: '90%',
+    padding: '0',
+    border: 'none',
+    background: 'none',
+    overflow: 'visible'
+  }
+};
 
 function ProtectedApp() {
   const { user, loading } = useAuth();
@@ -196,11 +219,6 @@ function ProtectedApp() {
               className="w-full p-2 border rounded mb-4"
             />
 
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/movies/:id" element={<MovieDetails />} />
-            </Routes>
-
             <ul className="w-3/4 bg-white shadow-md rounded-lg p-4">
               {movies
                 .filter(movie => movie.title.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -273,25 +291,15 @@ function ProtectedApp() {
         <Modal
           isOpen={modalIsOpen}
           onRequestClose={closeModal}
-          className="bg-white p-6 rounded-lg shadow-lg mx-auto mt-20 outline-none max-w-2xl"
-          overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start"
+          style={customStyles}
+          contentLabel="Détails du film"
         >
-          {selectedMovie ? (
-            <>
-              <div className="flex gap-6">
-                <img src={selectedMovie.poster_url} alt={selectedMovie.title} className="w-48 h-72 object-cover rounded" />
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold mb-4">{selectedMovie.title}</h2>
-                  <p className="mb-2">{selectedMovie.description}</p>
-                  <p className="mb-2"><strong>Genre :</strong> {selectedMovie.genre}</p>
-                  <p className="mb-4"><strong>Année :</strong> {selectedMovie.release_year}</p>
-                  <MovieActions movie={selectedMovie} onUpdate={handleMovieUpdate} />
-                </div>
-              </div>
-              <button onClick={closeModal} className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Fermer</button>
-            </>
-          ) : (
-            <p>Chargement...</p>
+          {selectedMovie && (
+            <MovieDetails 
+              movie={selectedMovie} 
+              onClose={closeModal}
+              onUpdate={handleMovieUpdate}
+            />
           )}
         </Modal>
       </div>
