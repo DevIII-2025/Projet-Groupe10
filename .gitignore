@@ -8,6 +8,8 @@ migrations/
 build/
 dist/
 
+venv/
+
 # Dependency directories
 jspm_packages/
 
