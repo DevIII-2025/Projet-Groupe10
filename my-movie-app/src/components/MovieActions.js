@@ -68,15 +68,18 @@ const MovieActions = ({ movie, onUpdate }) => {
             // Mettre à jour l'état local
             const newStatus = {
                 ...movieStatus,
-                is_viewed: true
+                is_viewed: result.status === 'viewed'
             };
             setMovieStatus(newStatus);
             
             // Mettre à jour l'état global
             onUpdate({
                 ...movie,
-                is_viewed: true
+                is_viewed: result.status === 'viewed'
             });
+
+            // Rafraîchir la liste des listes
+            await fetchLists();
         } catch (err) {
             console.error('Error marking movie as viewed:', err);
             setError('Erreur lors du marquage comme vu');

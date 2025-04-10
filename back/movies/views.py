@@ -139,20 +139,20 @@ class MovieViewSet(viewsets.ModelViewSet):
     def view(self, request, pk=None):
         movie = self.get_object()
         view, created = View.objects.get_or_create(user=request.user, movie=movie)
-        if created:
-            # Créer ou mettre à jour la liste "Déjà vu"
-            watched_list, _ = List.objects.get_or_create(
-                name="Déjà vu",
-                created_by=request.user,
-                is_system=True,
-                defaults={'description': 'Films que vous avez vus'}
-            )
-            MovieInList.objects.get_or_create(
-                movie=movie,
-                list=watched_list,
-                defaults={'note': 'Marqué comme vu automatiquement'}
-            )
-            logger.info(f"User {request.user.username} marked movie {movie.id} as viewed")
+        
+        # Créer ou mettre à jour la liste "Déjà vu"
+        watched_list, _ = List.objects.get_or_create(
+            name="Déjà vu",
+            created_by=request.user,
+            is_system=True,
+            defaults={'description': 'Films que vous avez vus'}
+        )
+        MovieInList.objects.get_or_create(
+            movie=movie,
+            list=watched_list,
+            defaults={'note': 'Marqué comme vu automatiquement'}
+        )
+        logger.info(f"User {request.user.username} marked movie {movie.id} as viewed")
         
         serializer = MovieSerializer(movie, context={'request': request})
         return Response({

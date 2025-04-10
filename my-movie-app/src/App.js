@@ -88,7 +88,7 @@ function ProtectedApp() {
             <MovieList />
             
             <h2 className="text-2xl font-semibold mt-8">Ajouter un film</h2>
-            <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 mt-4 w-3/4">
+            <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 mt-4 w-full">
               <div className="grid grid-cols-3 gap-4">
                 <input type="text" placeholder="Titre" value={title} onChange={(e) => setTitle(e.target.value)} required className="border p-2 w-full rounded" />
                 <input type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} required className="border p-2 w-full rounded" />

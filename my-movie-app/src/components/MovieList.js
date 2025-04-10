@@ -159,10 +159,10 @@ export default function MovieList() {
                   }}
                 />
                 {movie.is_liked && (
-                  <span className="absolute top-2 right-2 text-red-500 text-3xl">❤️</span>
+                  <span className="absolute top-2 right-2 text-red-500 text-3xl"></span>
                 )}
                 {movie.is_viewed && (
-                  <span className="absolute top-2 left-2 text-green-500 text-2xl">✓</span>
+                  <span className="absolute top-2 left-2 text-green-500 text-2xl"></span>
                 )}
               </div>
               <h2 className="mt-3 text-base font-semibold text-center truncate">{movie.title}</h2>
