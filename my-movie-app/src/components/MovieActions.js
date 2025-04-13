@@ -73,14 +73,14 @@ const MovieActions = ({ movie, onUpdate }) => {
             // Mettre à jour l'état local
             const newStatus = {
                 ...movieStatus,
-                is_viewed: true
+                is_viewed: result.status === 'viewed'
             };
             setMovieStatus(newStatus);
             
             // Mettre à jour l'état global
             onUpdate({
                 ...movie,
-                is_viewed: true
+                is_viewed: result.status === 'viewed'
             });
         } catch (err) {
             console.error('Error marking movie as viewed:', err);
@@ -128,10 +128,10 @@ const MovieActions = ({ movie, onUpdate }) => {
                 </button>
                 <button
                     onClick={handleMarkAsViewed}
-                    disabled={loading || movieStatus.is_viewed}
+                    disabled={loading}
                     className={`px-4 py-2 rounded transition-colors duration-200 ${
                         movieStatus.is_viewed
-                            ? 'bg-green-500 text-white'
+                            ? 'bg-green-500 text-white hover:bg-green-600'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                 >
