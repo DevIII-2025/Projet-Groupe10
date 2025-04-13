@@ -228,7 +228,10 @@ function ProtectedApp() {
                     className="border-b last:border-none py-4 flex items-center cursor-pointer"
                     onClick={() => openModal(movie.id)}
                   >
-                    <img src={movie.poster_url} alt={movie.title} className="w-20 h-30 object-cover mr-4" />
+                    <img src={movie.poster_url} alt={movie.title} className="w-20 h-30 object-cover mr-4" onError={(e) => {
+                        e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
+                        e.target.onerror = null;
+                    }} />
                     <div>
                       <strong className="text-lg">{movie.title}</strong> - {movie.release_year} ({movie.genre})
                       <p className="text-gray-600">{movie.description}</p>
