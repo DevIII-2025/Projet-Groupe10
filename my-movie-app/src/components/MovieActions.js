@@ -8,13 +8,18 @@ const MovieActions = ({ movie, onUpdate }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [movieStatus, setMovieStatus] = useState({
-        is_liked: false,
-        is_viewed: false
+        is_liked: movie.is_liked || false,
+        is_viewed: movie.is_viewed || false
     });
 
     useEffect(() => {
         fetchLists();
-    }, []);
+        // Mettre à jour l'état local quand le film change
+        setMovieStatus({
+            is_liked: movie.is_liked || false,
+            is_viewed: movie.is_viewed || false
+        });
+    }, [movie]);
 
     const fetchLists = async () => {
         try {
