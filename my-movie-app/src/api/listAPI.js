@@ -113,6 +113,6 @@ export const markMovieAsViewed = async (movieId) => {
         return response.data;
     } catch (error) {
         console.error('Error marking movie as viewed:', error.response?.data || error.message);
-        throw new Error(error.response?.data?.detail || 'Erreur lors du marquage du film comme vu');
+        throw new Error(error.response?.data?.detail || 'Erreur lors du marquage comme vu');
     }
 }; 

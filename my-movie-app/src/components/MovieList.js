@@ -35,12 +35,13 @@ export default function MovieList() {
     const fetchMovies = async () => {
       try {
         const response = await axiosInstance.get("/movies/");
-        // S'assurer que chaque film a la propriété is_liked
-        const moviesWithLikes = response.data.map(movie => ({
+        // S'assurer que chaque film a les propriétés is_liked et is_viewed
+        const moviesWithStatus = response.data.map(movie => ({
           ...movie,
-          is_liked: movie.is_liked || false
+          is_liked: movie.is_liked || false,
+          is_viewed: movie.is_viewed || false
         }));
-        setMovies(moviesWithLikes);
+        setMovies(moviesWithStatus);
       } catch (error) {
         console.error("Erreur lors de la récupération des films:", error);
       }
@@ -64,7 +65,8 @@ export default function MovieList() {
     setMovies(movies.map(movie => 
       movie.id === updatedMovie.id ? {
         ...movie,
-        is_liked: updatedMovie.is_liked
+        is_liked: updatedMovie.is_liked,
+        is_viewed: updatedMovie.is_viewed
       } : movie
     ));
   };
