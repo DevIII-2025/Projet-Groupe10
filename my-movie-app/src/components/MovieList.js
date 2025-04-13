@@ -87,7 +87,7 @@ export default function MovieList() {
                 alt={movie.title}
                 className="w-full h-[300px] object-cover rounded-lg shadow-lg"
                 onError={(e) => {
-                  e.target.src = '/placeholder-movie.jpg';
+                  e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
                   e.target.onerror = null;
                 }}
               />
@@ -124,7 +124,7 @@ export default function MovieList() {
                   alt={selectedMovie.title}
                   className="w-full rounded-lg shadow-lg"
                   onError={(e) => {
-                    e.target.src = '/placeholder-movie.jpg';
+                    e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
                     e.target.onerror = null;
                   }}
                 />

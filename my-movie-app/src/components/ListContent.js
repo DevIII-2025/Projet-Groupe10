@@ -118,7 +118,7 @@ const ListContent = ({ list, onBack }) => {
                                 alt={movie.title}
                                 className="w-24 h-36 object-cover rounded"
                                 onError={(e) => {
-                                    e.target.src = '/placeholder-movie.jpg';
+                                    e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
                                     e.target.onerror = null;
                                 }}
                             />
