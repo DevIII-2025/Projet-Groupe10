@@ -1,10 +1,7 @@
 import axios from 'axios';
 
-// Forcer l'URL du backend
-// const BACKEND_URL = 'http://149.202.49.197:8000';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-// const BACKEND_URL = 'http://192.168.0.10:8000';
+// Utiliser l'URL de l'environnement ou une URL par défaut
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 console.log("axiosConfig2: BACKEND_URL", BACKEND_URL);
 
 const BASE_URL = BACKEND_URL;
