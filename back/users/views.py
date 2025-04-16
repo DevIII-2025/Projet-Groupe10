@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from .serializers import RegisterSerializer
 import logging
+from django.contrib.auth.hashers import check_password
 
 logger = logging.getLogger(__name__)
 
@@ -128,3 +129,45 @@ class RegisterView(APIView):
             }
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UpdateProfileView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request):
+        user = request.user
+        username = request.data.get('username')
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+
+        if username and username != user.username:
+            # Vérifier si le nom d'utilisateur est déjà pris
+            if User.objects.filter(username=username).exclude(id=user.id).exists():
+                return Response(
+                    {"detail": "Ce nom d'utilisateur est déjà pris"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            user.username = username
+
+        # Si un nouveau mot de passe est fourni
+        if new_password:
+            if not current_password:
+                return Response(
+                    {"detail": "Le mot de passe actuel est requis"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Vérifier le mot de passe actuel
+            if not check_password(current_password, user.password):
+                return Response(
+                    {"detail": "Mot de passe actuel incorrect"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            user.set_password(new_password)
+
+        user.save()
+        
+        return Response({
+            "username": user.username,
+            "message": "Profil mis à jour avec succès"
+        })
