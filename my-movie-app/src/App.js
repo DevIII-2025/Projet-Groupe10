@@ -6,6 +6,7 @@ import Home from './components/Home';
 import LoginForm from "./components/LoginForm";
 import Register from "./components/Register";
 import LogoutButton from "./components/LogoutButton";
+import ProfileButton from "./components/ProfileButton";
 import Lists from "./components/Lists";
 import ListContent from "./components/ListContent";
 import MovieActions from "./components/MovieActions";
@@ -180,6 +181,7 @@ function ProtectedApp() {
             <p className="text-sm text-gray-600">
               Connecté en tant que <strong>{user.username}</strong>
             </p>
+            <ProfileButton />
             <LogoutButton />
           </div>
         </div>
