@@ -44,7 +44,12 @@ const ProfileButton = () => {
       const response = await axiosInstance.patch('/users/update-profile/', updateData);
       setUser({ ...user, username: response.data.username });
       setSuccess('Profil mis à jour avec succès');
-      setIsModalOpen(false);
+      
+      // Attendre 2 secondes avant de fermer la modale
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setSuccess('');
+      }, 2000);
     } catch (err) {
       console.error('Erreur lors de la mise à jour du profil:', err);
       setError(err.response?.data?.detail || err.message || 'Une erreur est survenue');
