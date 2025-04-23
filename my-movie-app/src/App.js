@@ -45,6 +45,8 @@ function ProtectedApp() {
   const [description, setDescription] = useState("");
   const [releaseYear, setReleaseYear] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const [posterUrl, setPosterUrl] = useState("");
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState(null);
@@ -65,6 +67,9 @@ function ProtectedApp() {
     let url = `/movies/?page=${page}`;
     if (search) {
       url += `&search=${encodeURIComponent(search)}`;
+      setSearchTerm(search.trim() !== "" ? search : "");
+    } else {
+      setSearchTerm("");
     }
     if (sort) {
       url += `&ordering=${sort}`;
@@ -85,8 +90,8 @@ function ProtectedApp() {
   };
 
   useEffect(() => {
-    fetchMovies(1, searchQuery, sortBy);
-  }, [user, searchQuery, sortBy]);
+    fetchMovies(1, "", sortBy);
+  }, [user, sortBy]);
 
   const validateForm = () => {
     if (!title.trim()) {
@@ -132,7 +137,7 @@ function ProtectedApp() {
       poster_url: posterUrl
     })
       .then(response => {
-        fetchMovies(currentPage, searchQuery, sortBy);
+        fetchMovies(currentPage, searchTerm, sortBy);
         setTitle("");
         setDescription("");
         setReleaseYear("");
@@ -172,6 +177,13 @@ function ProtectedApp() {
     if (selectedMovie?.id === updatedMovie.id) {
       setSelectedMovie(updatedMovie);
     }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearchQuery(inputValue);
+    fetchMovies(1, inputValue, sortBy);
+    setInputValue("");
   };
 
   if (loading) return <p>Chargement...</p>;
@@ -232,18 +244,36 @@ function ProtectedApp() {
               </button>
             </div>
 
-            <input
-              type="text"
-              placeholder="Rechercher un film..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full p-2 border rounded mb-4"
-            />
+            <form onSubmit={handleSearch} className="flex mb-4">
+              <input
+                type="text"
+                placeholder="Rechercher un film..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                className="flex-1 p-2 border rounded-l"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-r"
+              >
+                Rechercher
+              </button>
+            </form>
+            
+            {searchTerm && searchTerm.trim() !== "" && (
+              <div className="mb-4">
+                {movies.length > 0 ? (
+                  <p className="text-gray-600">Résultats de recherche pour : <span className="font-medium">{searchTerm}</span></p>
+                ) : (
+                  <p className="text-gray-600">Aucun résultat trouvé pour : <span className="font-medium">{searchTerm}</span></p>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-center items-center mt-4 mb-8">
               <button 
                 className={`px-6 py-2 ${currentPage === 1 ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded`}
-                onClick={() => fetchMovies(Math.max(currentPage - 1, 1), searchQuery, sortBy)}
+                onClick={() => fetchMovies(Math.max(currentPage - 1, 1), searchTerm, sortBy)}
                 disabled={currentPage === 1}
               >
                 Précédent
@@ -255,7 +285,7 @@ function ProtectedApp() {
               
               <button 
                 className={`px-6 py-2 ${currentPage >= totalPages ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded`}
-                onClick={() => fetchMovies(Math.min(currentPage + 1, totalPages), searchQuery, sortBy)}
+                onClick={() => fetchMovies(Math.min(currentPage + 1, totalPages), searchTerm, sortBy)}
                 disabled={currentPage >= totalPages}
               >
                 Suivant
@@ -284,7 +314,7 @@ function ProtectedApp() {
             <div className="flex justify-center items-center mt-4 mb-8">
               <button 
                 className={`px-6 py-2 ${currentPage === 1 ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded`}
-                onClick={() => fetchMovies(Math.max(currentPage - 1, 1), searchQuery, sortBy)}
+                onClick={() => fetchMovies(Math.max(currentPage - 1, 1), searchTerm, sortBy)}
                 disabled={currentPage === 1}
               >
                 Précédent
@@ -296,13 +326,13 @@ function ProtectedApp() {
               
               <button 
                 className={`px-6 py-2 ${currentPage >= totalPages ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded`}
-                onClick={() => fetchMovies(Math.min(currentPage + 1, totalPages), searchQuery, sortBy)}
+                onClick={() => fetchMovies(Math.min(currentPage + 1, totalPages), searchTerm, sortBy)}
                 disabled={currentPage >= totalPages}
               >
                 Suivant
               </button>
             </div>
-
+            
             <h2 className="text-2xl font-semibold mt-8">Ajouter un film</h2>
             <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 mt-4 w-full">
               <div className="grid grid-cols-3 gap-4">
