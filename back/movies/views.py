@@ -11,8 +11,16 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 import logging
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 logger = logging.getLogger(__name__)
+
+# Add custom pagination class
+class MoviePagination(PageNumberPagination):
+    page_size = 24  # 4 rows with 6 movies per row
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 @api_view(['GET', 'POST'])
 def movie_list(request):
@@ -45,6 +53,20 @@ class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = MoviePagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['title', 'description']
+    ordering_fields = ['title', 'release_year', 'created_at']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        queryset = Movie.objects.all()
+        search = self.request.query_params.get('search', None)
+        
+        if search:
+            queryset = queryset.filter(title__icontains=search)
+            
+        return queryset
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

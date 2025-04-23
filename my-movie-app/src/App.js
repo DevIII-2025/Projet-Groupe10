@@ -52,24 +52,41 @@ function ProtectedApp() {
   const [showLists, setShowLists] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalMovies, setTotalMovies] = useState(0);
+  const [sortBy, setSortBy] = useState("");
 
-  useEffect(() => {
+  const fetchMovies = (page = 1, search = '', sort = sortBy) => {
     if (!user) return;
     setIsLoading(true);
     setError(null);
-    axiosInstance.get("/movies/")
+    
+    let url = `/movies/?page=${page}`;
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+    if (sort) {
+      url += `&ordering=${sort}`;
+    }
+    
+    axiosInstance.get(url)
       .then(response => {
-        const uniqueMovies = response.data.filter((movie, index, self) =>
-          index === self.findIndex((m) => m.id === movie.id)
-        );
-        setMovies(uniqueMovies);
+        setMovies(response.data.results);
+        setTotalPages(Math.ceil(response.data.count / 24));
+        setTotalMovies(response.data.count);
+        setCurrentPage(page);
       })
       .catch(error => {
         console.error("Erreur :", error);
         setError("Impossible de charger les films. Veuillez réessayer plus tard.");
       })
       .finally(() => setIsLoading(false));
-  }, [user]);
+  };
+
+  useEffect(() => {
+    fetchMovies(1, searchQuery, sortBy);
+  }, [user, searchQuery, sortBy]);
 
   const validateForm = () => {
     if (!title.trim()) {
@@ -115,7 +132,7 @@ function ProtectedApp() {
       poster_url: posterUrl
     })
       .then(response => {
-        setMovies((prevMovies) => [...prevMovies, response.data]);
+        fetchMovies(currentPage, searchQuery, sortBy);
         setTitle("");
         setDescription("");
         setReleaseYear("");
@@ -130,8 +147,8 @@ function ProtectedApp() {
   };
 
   const sortMovies = () => {
-    const sortedMovies = [...movies].sort((a, b) => a.release_year - b.release_year);
-    setMovies(sortedMovies);
+    const newSortBy = sortBy === 'release_year' ? '-release_year' : 'release_year';
+    setSortBy(newSortBy);
   };
 
   const openModal = (movieId) => {
@@ -206,12 +223,14 @@ function ProtectedApp() {
           )
         ) : (
           <>
-            <button
-              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700 mb-4"
-              onClick={sortMovies}
-            >
-              Trier par année
-            </button>
+            <div className="flex gap-4 mb-6">
+              <button
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
+                onClick={sortMovies}
+              >
+                Trier par année
+              </button>
+            </div>
 
             <input
               type="text"
@@ -221,26 +240,71 @@ function ProtectedApp() {
               className="w-full p-2 border rounded mb-4"
             />
 
-            <ul className="w-3/4 bg-white shadow-md rounded-lg p-4">
-              {movies
-                .filter(movie => movie.title.toLowerCase().includes(searchQuery.toLowerCase()))
-                .map((movie, index) => (
-                  <li
-                    key={`${movie.id}-${index}`}
-                    className="border-b last:border-none py-4 flex items-center cursor-pointer"
+            <div className="flex justify-center items-center mt-4 mb-8">
+              <button 
+                className={`px-6 py-2 ${currentPage === 1 ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded`}
+                onClick={() => fetchMovies(Math.max(currentPage - 1, 1), searchQuery, sortBy)}
+                disabled={currentPage === 1}
+              >
+                Précédent
+              </button>
+              
+              <span className="mx-4">
+                Page {currentPage} sur {totalPages}
+              </span>
+              
+              <button 
+                className={`px-6 py-2 ${currentPage >= totalPages ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded`}
+                onClick={() => fetchMovies(Math.min(currentPage + 1, totalPages), searchQuery, sortBy)}
+                disabled={currentPage >= totalPages}
+              >
+                Suivant
+              </button>
+            </div>
+
+            <div className="w-full">
+              <div className="grid grid-cols-6 gap-6 mb-6">
+                {movies.map((movie) => (
+                  <div 
+                    key={movie.id} 
+                    className="cursor-pointer flex flex-col items-center"
                     onClick={() => openModal(movie.id)}
                   >
-                    <img src={movie.poster_url} alt={movie.title} className="w-20 h-30 object-cover mr-4" />
-                    <div>
-                      <strong className="text-lg">{movie.title}</strong> - {movie.release_year} ({movie.genre})
-                      <p className="text-gray-600">{movie.description}</p>
-                    </div>
-                  </li>
+                    <img 
+                      src={movie.poster_url} 
+                      alt={movie.title} 
+                      className="w-full h-64 object-cover rounded transition-transform hover:scale-110" 
+                    />
+                    <h3 className="mt-2 text-center font-medium line-clamp-2 overflow-hidden">{movie.title}</h3>
+                  </div>
                 ))}
-            </ul>
+              </div>
+            </div>
+            
+            <div className="flex justify-center items-center mt-4 mb-8">
+              <button 
+                className={`px-6 py-2 ${currentPage === 1 ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded`}
+                onClick={() => fetchMovies(Math.max(currentPage - 1, 1), searchQuery, sortBy)}
+                disabled={currentPage === 1}
+              >
+                Précédent
+              </button>
+              
+              <span className="mx-4">
+                Page {currentPage} sur {totalPages}
+              </span>
+              
+              <button 
+                className={`px-6 py-2 ${currentPage >= totalPages ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded`}
+                onClick={() => fetchMovies(Math.min(currentPage + 1, totalPages), searchQuery, sortBy)}
+                disabled={currentPage >= totalPages}
+              >
+                Suivant
+              </button>
+            </div>
 
             <h2 className="text-2xl font-semibold mt-8">Ajouter un film</h2>
-            <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 mt-4 w-3/4">
+            <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 mt-4 w-full">
               <div className="grid grid-cols-3 gap-4">
                 <input 
                   type="text" 
