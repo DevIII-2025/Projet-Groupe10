@@ -13,6 +13,7 @@ from rest_framework.decorators import action
 import logging
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter, OrderingFilter
+from django.db import models
 
 logger = logging.getLogger(__name__)
 
@@ -56,15 +57,24 @@ class MovieViewSet(viewsets.ModelViewSet):
     pagination_class = MoviePagination
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['title', 'description']
-    ordering_fields = ['title', 'release_year', 'created_at']
+    ordering_fields = ['title', 'release_year', 'created_at', 'review_avg']
     ordering = ['-created_at']
 
     def get_queryset(self):
         queryset = Movie.objects.all()
         search = self.request.query_params.get('search', None)
+        release_year = self.request.query_params.get('release_year', None)
+        
+        # Add annotation for review average
+        queryset = queryset.annotate(
+            review_avg=models.Avg('reviews__rating')
+        )
         
         if search:
             queryset = queryset.filter(title__icontains=search)
+            
+        if release_year and release_year.isdigit():
+            queryset = queryset.filter(release_year=int(release_year))
             
         return queryset
 

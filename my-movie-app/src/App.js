@@ -47,6 +47,7 @@ function ProtectedApp() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [inputValue, setInputValue] = useState("");
+  const [currentSearch, setCurrentSearch] = useState("");
   const [posterUrl, setPosterUrl] = useState("");
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState(null);
@@ -58,29 +59,67 @@ function ProtectedApp() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalMovies, setTotalMovies] = useState(0);
   const [sortBy, setSortBy] = useState("");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [yearFilter, setYearFilter] = useState("");
+  const [sortOption, setSortOption] = useState("");
+  const [activeFilters, setActiveFilters] = useState({ year: "", sort: "" });
 
-  const fetchMovies = (page = 1, search = '', sort = sortBy) => {
-    if (!user) return;
-    setIsLoading(true);
-    setError(null);
+  const fetchMovies = (page, search, sort) => {
+    setCurrentPage(page);
     
+    // Only update searchTerm if explicitly provided
+    if (search !== null) {
+      setSearchTerm(search);
+    }
+    
+    // Only update sortBy if explicitly provided
+    if (sort !== null) {
+      setSortBy(sort);
+    }
+    
+    // Use current state values if null was passed
+    const effectiveSearch = search !== null ? search : searchTerm;
+    const effectiveSort = sort !== null ? sort : sortBy;
+
     let url = `/movies/?page=${page}`;
-    if (search) {
-      url += `&search=${encodeURIComponent(search)}`;
-      setSearchTerm(search.trim() !== "" ? search : "");
-    } else {
-      setSearchTerm("");
+    
+    if (effectiveSearch) {
+      url += `&search=${encodeURIComponent(effectiveSearch)}&startswith=true`;
     }
-    if (sort) {
-      url += `&ordering=${sort}`;
+    
+    if (effectiveSort) {
+      url += `&ordering=${effectiveSort}`;
     }
+    
+    // Add year filter if provided
+    if (yearFilter && !isNaN(yearFilter)) {
+      url += `&release_year=${yearFilter}`;
+    }
+    
+    console.log(`Fetching movies with URL: ${url}, currentSearch: ${effectiveSearch}`);
     
     axiosInstance.get(url)
       .then(response => {
-        setMovies(response.data.results);
-        setTotalPages(Math.ceil(response.data.count / 24));
-        setTotalMovies(response.data.count);
-        setCurrentPage(page);
+        let results = response.data.results;
+        
+        // If searching and startswith=true not supported by backend, filter on frontend
+        if (effectiveSearch && effectiveSearch.trim() !== "") {
+          const lowerSearch = effectiveSearch.toLowerCase();
+          results = results.filter(movie => 
+            movie.title.toLowerCase().startsWith(lowerSearch)
+          );
+        }
+        
+        setMovies(results);
+        
+        // Recalculate pagination based on filtered results if we did frontend filtering
+        if (effectiveSearch && effectiveSearch.trim() !== "") {
+          setTotalPages(Math.max(1, Math.ceil(results.length / 24)));
+          setTotalMovies(results.length);
+        } else {
+          setTotalPages(Math.ceil(response.data.count / 24));
+          setTotalMovies(response.data.count);
+        }
       })
       .catch(error => {
         console.error("Erreur :", error);
@@ -90,8 +129,10 @@ function ProtectedApp() {
   };
 
   useEffect(() => {
-    fetchMovies(1, "", sortBy);
-  }, [user, sortBy]);
+    if (!user) return;
+    setIsLoading(true);
+    fetchMovies(1, "", "");
+  }, [user]);
 
   const validateForm = () => {
     if (!title.trim()) {
@@ -151,11 +192,6 @@ function ProtectedApp() {
       .finally(() => setIsLoading(false));
   };
 
-  const sortMovies = () => {
-    const newSortBy = sortBy === 'release_year' ? '-release_year' : 'release_year';
-    setSortBy(newSortBy);
-  };
-
   const openModal = (movieId) => {
     axiosInstance.get(`/movies/${movieId}/`)
       .then(response => {
@@ -181,9 +217,56 @@ function ProtectedApp() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setSearchQuery(inputValue);
+    
+    // Use the input value as the new search term
     fetchMovies(1, inputValue, sortBy);
-    setInputValue("");
+    setInputValue(""); // Clear the input field after search
+  };
+
+  const handleFilter = () => {
+    let newSortBy = "";
+    
+    switch(sortOption) {
+      case "year-asc":
+        newSortBy = "release_year";
+        break;
+      case "year-desc":
+        newSortBy = "-release_year";
+        break;
+      case "alpha-asc":
+        newSortBy = "title";
+        break;
+      case "alpha-desc":
+        newSortBy = "-title";
+        break;
+      case "review-asc":
+        newSortBy = "review_avg";
+        break;
+      case "review-desc":
+        newSortBy = "-review_avg";
+        break;
+      default:
+        newSortBy = sortBy;
+    }
+    
+    setSortBy(newSortBy);
+    setActiveFilters({
+      year: yearFilter,
+      sort: sortOption
+    });
+    
+    setShowFilterDropdown(false);
+    
+    fetchMovies(1, null, newSortBy);
+  };
+
+  const clearFilters = () => {
+    setYearFilter("");
+    setSortOption("");
+    setSortBy("");
+    setActiveFilters({ year: "", sort: "" });
+    
+    fetchMovies(1, null, "");
   };
 
   if (loading) return <p>Chargement...</p>;
@@ -235,45 +318,270 @@ function ProtectedApp() {
           )
         ) : (
           <>
-            <div className="flex gap-4 mb-6">
-              <button
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
-                onClick={sortMovies}
-              >
-                Trier par année
-              </button>
-            </div>
-
-            <form onSubmit={handleSearch} className="flex mb-4">
-              <input
-                type="text"
-                placeholder="Rechercher un film..."
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                className="flex-1 p-2 border rounded-l"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-r"
-              >
-                Rechercher
-              </button>
-            </form>
-            
-            {searchTerm && searchTerm.trim() !== "" && (
-              <div className="mb-4">
-                {movies.length > 0 ? (
-                  <p className="text-gray-600">Résultats de recherche pour : <span className="font-medium">{searchTerm}</span></p>
-                ) : (
-                  <p className="text-gray-600">Aucun résultat trouvé pour : <span className="font-medium">{searchTerm}</span></p>
+            <div className="mb-4"> {/* Source for the filtration: Claude-3.7 sonnet */}
+              <form onSubmit={handleSearch} className="flex">
+                <input
+                  type="text"
+                  placeholder="Rechercher un film..."
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className="flex-1 p-2 border rounded-l"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-none"
+                >
+                  Rechercher
+                </button>
+                <div className="relative" style={{zIndex: 1}}>
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-r"
+                    onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                    style={{height: '100%'}}
+                  >
+                    Filtrer
+                  </button>
+                  
+                  {showFilterDropdown && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50 p-4">
+                      <div className="mb-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                          Année
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="Filtrer par année"
+                          value={yearFilter}
+                          onChange={(e) => setYearFilter(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (yearFilter) {
+                                setActiveFilters({...activeFilters, year: yearFilter});
+                                setShowFilterDropdown(false);
+                                fetchMovies(1, null, sortBy);
+                              }
+                            }
+                          }}
+                          className="w-full p-2 border rounded"
+                        />
+                      </div>
+                      
+                      <div className="mb-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                          Trier par
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="sortOption"
+                              value="year-asc"
+                              checked={sortOption === "year-asc"}
+                              onChange={(e) => setSortOption(e.target.value)}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">Année (asc)</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="sortOption"
+                              value="year-desc"
+                              checked={sortOption === "year-desc"}
+                              onChange={(e) => setSortOption(e.target.value)}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">Année (desc)</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="sortOption"
+                              value="alpha-asc"
+                              checked={sortOption === "alpha-asc"}
+                              onChange={(e) => setSortOption(e.target.value)}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">A-Z</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="sortOption"
+                              value="alpha-desc"
+                              checked={sortOption === "alpha-desc"}
+                              onChange={(e) => setSortOption(e.target.value)}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">Z-A</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="sortOption"
+                              value="review-asc"
+                              checked={sortOption === "review-asc"}
+                              onChange={(e) => setSortOption(e.target.value)}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">Avis (asc)</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="sortOption"
+                              value="review-desc"
+                              checked={sortOption === "review-desc"}
+                              onChange={(e) => setSortOption(e.target.value)}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">Avis (desc)</span>
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <button
+                          type="button"
+                          className="px-3 py-1 bg-gray-300 text-gray-800 rounded"
+                          onClick={clearFilters}
+                        >
+                          Réinitialiser
+                        </button>
+                        <button
+                          type="button"
+                          className="px-3 py-1 bg-blue-600 text-white rounded"
+                          onClick={handleFilter}
+                        >
+                          Appliquer
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </form>
+              
+              <div className="mt-2 flex flex-wrap gap-2">
+                {activeFilters.year && (
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                    Année: {activeFilters.year}
+                    <button 
+                      className="ml-1 text-blue-600" 
+                      onClick={() => {
+                        // Clear the year filter state first
+                        setYearFilter("");
+                        setActiveFilters({...activeFilters, year: ""});
+                        
+                        // Force a new fetch without the year filter
+                        // We need to pass the current page and search parameters to maintain those
+                        const url = `/movies/?page=${currentPage}${searchTerm ? `&search=${encodeURIComponent(searchTerm)}&startswith=true` : ''}${sortBy ? `&ordering=${sortBy}` : ''}`;
+                        
+                        // Set loading state to true to show loading indicator
+                        setIsLoading(true);
+                        
+                        axiosInstance.get(url)
+                          .then(response => {
+                            let results = response.data.results;
+                            
+                            // Apply frontend filtering for search if needed
+                            if (searchTerm && searchTerm.trim() !== "") {
+                              const lowerSearch = searchTerm.toLowerCase();
+                              results = results.filter(movie => 
+                                movie.title.toLowerCase().startsWith(lowerSearch)
+                              );
+                            }
+                            
+                            setMovies(results);
+                            setTotalPages(Math.ceil(response.data.count / 24));
+                            setTotalMovies(response.data.count);
+                          })
+                          .catch(error => {
+                            console.error("Erreur :", error);
+                            setError("Impossible de charger les films. Veuillez réessayer plus tard.");
+                          })
+                          .finally(() => setIsLoading(false));
+                      }}
+                    >
+                      &times;
+                    </button>
+                  </span>
+                )}
+                {activeFilters.sort && (
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                    Tri: {
+                      activeFilters.sort === "year-asc" ? "Année (asc)" :
+                      activeFilters.sort === "year-desc" ? "Année (desc)" :
+                      activeFilters.sort === "alpha-asc" ? "A-Z" :
+                      activeFilters.sort === "alpha-desc" ? "Z-A" :
+                      activeFilters.sort === "review-asc" ? "Avis (asc)" :
+                      "Avis (desc)"
+                    }
+                    <button 
+                      className="ml-1 text-blue-600" 
+                      onClick={() => {
+                        // Clear the sort filter state first
+                        setSortOption("");
+                        setSortBy("");
+                        setActiveFilters({...activeFilters, sort: ""});
+                        
+                        // Force a new fetch without the sort filter
+                        // We need to pass the current page and search parameters to maintain those
+                        const url = `/movies/?page=${currentPage}${searchTerm ? `&search=${encodeURIComponent(searchTerm)}&startswith=true` : ''}${yearFilter && !isNaN(yearFilter) ? `&release_year=${yearFilter}` : ''}`;
+                        
+                        // Set loading state to true to show loading indicator
+                        setIsLoading(true);
+                        
+                        axiosInstance.get(url)
+                          .then(response => {
+                            let results = response.data.results;
+                            
+                            // Apply frontend filtering for search if needed
+                            if (searchTerm && searchTerm.trim() !== "") {
+                              const lowerSearch = searchTerm.toLowerCase();
+                              results = results.filter(movie => 
+                                movie.title.toLowerCase().startsWith(lowerSearch)
+                              );
+                            }
+                            
+                            setMovies(results);
+                            setTotalPages(Math.ceil(response.data.count / 24));
+                            setTotalMovies(response.data.count);
+                          })
+                          .catch(error => {
+                            console.error("Erreur :", error);
+                            setError("Impossible de charger les films. Veuillez réessayer plus tard.");
+                          })
+                          .finally(() => setIsLoading(false));
+                      }}
+                    >
+                      &times;
+                    </button>
+                  </span>
+                )}
+                
+                {searchTerm && searchTerm.trim() !== "" && (
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                    Recherche: {searchTerm}
+                    <button 
+                      className="ml-1 text-blue-600" 
+                      onClick={() => {
+                        // Clear the search completely
+                        fetchMovies(1, "", sortBy);
+                      }}
+                    >
+                      &times;
+                    </button>
+                  </span>
                 )}
               </div>
-            )}
-
+            </div>
+            
             <div className="flex justify-center items-center mt-4 mb-8">
               <button 
                 className={`px-6 py-2 ${currentPage === 1 ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded`}
-                onClick={() => fetchMovies(Math.max(currentPage - 1, 1), searchTerm, sortBy)}
+                onClick={() => fetchMovies(Math.max(currentPage - 1, 1), null, sortBy)}
                 disabled={currentPage === 1}
               >
                 Précédent
@@ -285,7 +593,7 @@ function ProtectedApp() {
               
               <button 
                 className={`px-6 py-2 ${currentPage >= totalPages ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded`}
-                onClick={() => fetchMovies(Math.min(currentPage + 1, totalPages), searchTerm, sortBy)}
+                onClick={() => fetchMovies(Math.min(currentPage + 1, totalPages), null, sortBy)}
                 disabled={currentPage >= totalPages}
               >
                 Suivant
@@ -293,28 +601,43 @@ function ProtectedApp() {
             </div>
 
             <div className="w-full">
-              <div className="grid grid-cols-6 gap-6 mb-6">
-                {movies.map((movie) => (
-                  <div 
-                    key={movie.id} 
-                    className="cursor-pointer flex flex-col items-center"
-                    onClick={() => openModal(movie.id)}
-                  >
-                    <img 
-                      src={movie.poster_url} 
-                      alt={movie.title} 
-                      className="w-full h-64 object-cover rounded transition-transform hover:scale-110" 
-                    />
-                    <h3 className="mt-2 text-center font-medium line-clamp-2 overflow-hidden">{movie.title}</h3>
+              {movies.length > 0 ? (
+                <div className="grid grid-cols-6 gap-6 mb-6">
+                  {movies.map((movie) => (
+                    <div 
+                      key={movie.id} 
+                      className="cursor-pointer flex flex-col items-center"
+                      onClick={() => openModal(movie.id)}
+                    >
+                      <img 
+                        src={movie.poster_url} 
+                        alt={movie.title} 
+                        className="w-full h-64 object-cover rounded transition-transform hover:scale-110" 
+                      />
+                      <h3 className="mt-2 text-center font-medium line-clamp-2 overflow-hidden">{movie.title}</h3>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                searchTerm && searchTerm.trim() !== "" ? (
+                  <div className="w-full flex justify-center items-center py-16">
+                    <div className="text-center">
+                      <p className="text-xl text-red-600 mb-4">Aucun résultat trouvé pour : <span className="font-medium">{searchTerm}</span></p>
+                      <p className="text-gray-600">Essayez des termes de recherche différents ou supprimez les filtres.</p>
+                    </div>
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <div className="w-full flex justify-center items-center py-16">
+                    <p className="text-gray-600">Aucun film disponible.</p>
+                  </div>
+                )
+              )}
             </div>
             
             <div className="flex justify-center items-center mt-4 mb-8">
               <button 
                 className={`px-6 py-2 ${currentPage === 1 ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded`}
-                onClick={() => fetchMovies(Math.max(currentPage - 1, 1), searchTerm, sortBy)}
+                onClick={() => fetchMovies(Math.max(currentPage - 1, 1), null, sortBy)}
                 disabled={currentPage === 1}
               >
                 Précédent
@@ -326,7 +649,7 @@ function ProtectedApp() {
               
               <button 
                 className={`px-6 py-2 ${currentPage >= totalPages ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded`}
-                onClick={() => fetchMovies(Math.min(currentPage + 1, totalPages), searchTerm, sortBy)}
+                onClick={() => fetchMovies(Math.min(currentPage + 1, totalPages), null, sortBy)}
                 disabled={currentPage >= totalPages}
               >
                 Suivant
