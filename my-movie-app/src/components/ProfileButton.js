@@ -68,7 +68,7 @@ const ProfileButton = () => {
       </button>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[2000]"> {/* I had to change this in order to fix a bug that would still show the filter button even when in profile modification menu */}
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Modifier mon profil</h2>
