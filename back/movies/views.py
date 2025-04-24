@@ -192,26 +192,48 @@ class MovieViewSet(viewsets.ModelViewSet):
     def view(self, request, pk=None):
         movie = self.get_object()
         view, created = View.objects.get_or_create(user=request.user, movie=movie)
+        
         if created:
-            # Créer ou mettre à jour la liste "Déjà vu"
+            # Créer ou récupérer la liste "Déjà vu"
             watched_list, _ = List.objects.get_or_create(
                 name="Déjà vu",
                 created_by=request.user,
                 is_system=True,
                 defaults={'description': 'Films que vous avez vus'}
             )
+            # Ajouter le film à la liste "Déjà vu"
             MovieInList.objects.get_or_create(
                 movie=movie,
                 list=watched_list,
                 defaults={'note': 'Marqué comme vu automatiquement'}
             )
-            logger.info(f"User {request.user.username} marked movie {movie.id} as viewed")
-        
-        serializer = MovieSerializer(movie, context={'request': request})
-        return Response({
-            'status': 'viewed',
-            'movie': serializer.data
-        })
+            logger.info(f"User {request.user.username} viewed movie {movie.id}")
+            serializer = MovieSerializer(movie, context={'request': request})
+            return Response({
+                'status': 'viewed',
+                'movie': serializer.data
+            })
+        else:
+            # Si on unview, on retire aussi de la liste "Déjà vu"
+            view.delete()
+            try:
+                watched_list = List.objects.get(
+                    name="Déjà vu",
+                    created_by=request.user,
+                    is_system=True
+                )
+                MovieInList.objects.filter(
+                    movie=movie,
+                    list=watched_list
+                ).delete()
+            except List.DoesNotExist:
+                pass
+            logger.info(f"User {request.user.username} unviewed movie {movie.id}")
+            serializer = MovieSerializer(movie, context={'request': request})
+            return Response({
+                'status': 'unviewed',
+                'movie': serializer.data
+            })
 
 class ListViewSet(viewsets.ModelViewSet):
     serializer_class = ListSerializer

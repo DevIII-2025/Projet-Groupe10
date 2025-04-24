@@ -35,7 +35,13 @@ export default function MovieList() {
     const fetchMovies = async () => {
       try {
         const response = await axiosInstance.get("/movies/");
-        setMovies(response.data);
+        // S'assurer que chaque film a les propriétés is_liked et is_viewed
+        const moviesWithStatus = response.data.map(movie => ({
+          ...movie,
+          is_liked: movie.is_liked || false,
+          is_viewed: movie.is_viewed || false
+        }));
+        setMovies(moviesWithStatus);
       } catch (error) {
         console.error("Erreur lors de la récupération des films:", error);
       }
@@ -57,7 +63,11 @@ export default function MovieList() {
   const handleMovieUpdate = (updatedMovie) => {
     setSelectedMovie(updatedMovie);
     setMovies(movies.map(movie => 
-      movie.id === updatedMovie.id ? updatedMovie : movie
+      movie.id === updatedMovie.id ? {
+        ...movie,
+        is_liked: updatedMovie.is_liked,
+        is_viewed: updatedMovie.is_viewed
+      } : movie
     ));
   };
 
@@ -77,7 +87,7 @@ export default function MovieList() {
                 alt={movie.title}
                 className="w-full h-[300px] object-cover rounded-lg shadow-lg"
                 onError={(e) => {
-                  e.target.src = '/placeholder-movie.jpg';
+                  e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
                   e.target.onerror = null;
                 }}
               />
@@ -114,7 +124,7 @@ export default function MovieList() {
                   alt={selectedMovie.title}
                   className="w-full rounded-lg shadow-lg"
                   onError={(e) => {
-                    e.target.src = '/placeholder-movie.jpg';
+                    e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
                     e.target.onerror = null;
                   }}
                 />

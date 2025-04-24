@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 import requests
 import os
+from movies.models import List
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,4 +35,21 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
+        
+        # Créer la liste "Favoris"
+        List.objects.create(
+            name="Favoris",
+            description="Films que vous avez aimés",
+            created_by=user,
+            is_system=True
+        )
+        
+        # Créer la liste "Déjà vu"
+        List.objects.create(
+            name="Déjà vu",
+            description="Films que vous avez vus",
+            created_by=user,
+            is_system=True
+        )
+        
         return user
