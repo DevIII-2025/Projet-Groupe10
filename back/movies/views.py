@@ -294,7 +294,11 @@ class ListViewSet(viewsets.ModelViewSet):
                 movie_in_list,
                 context={'request': request}
             )
-            return Response(serializer.data)
+            return Response({
+                'data': serializer.data,
+                'already_in_list': not created,
+                'message': 'Film déja dans la liste' if not created else 'Film ajouté à la liste'
+            })
             
         except Movie.DoesNotExist:
             logger.error(f"Movie {movie_id} not found")

@@ -72,7 +72,11 @@ export const addMovieToList = async (listId, movieId, note = '') => {
             note
         });
         console.log('Movie added successfully:', response.data);
-        return response.data;
+        return {
+            data: response.data.data,
+            alreadyInList: response.data.already_in_list,
+            message: response.data.message
+        };
     } catch (error) {
         console.error('Error adding movie to list:', error.response?.data || error.message);
         const errorMessage = error.response?.data?.detail || 
