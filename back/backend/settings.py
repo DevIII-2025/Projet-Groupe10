@@ -216,4 +216,3 @@ STATIC_URL = 'static/'
 
 # Clé par défaut des champs auto
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
