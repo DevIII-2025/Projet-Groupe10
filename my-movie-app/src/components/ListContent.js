@@ -130,7 +130,7 @@ const ListContent = ({ list, onBack }) => {
                                 <p className="mt-2 text-gray-700">{movie.description}</p>
                                 {note && (
                                     <p className="mt-2 text-sm text-gray-500">
-                                        Note : {note}
+                                        Note personnelle : {note}
                                     </p>
                                 )}
                             </div>

@@ -7,6 +7,7 @@ const MovieActions = ({ movie, onUpdate }) => {
     const [note, setNote] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
     const [movieStatus, setMovieStatus] = useState({
         is_liked: movie.is_liked || false,
         is_viewed: movie.is_viewed || false
@@ -96,12 +97,14 @@ const MovieActions = ({ movie, onUpdate }) => {
 
         setLoading(true);
         setError(null);
+        setSuccessMessage(null);
         try {
             console.log('Adding movie to list:', { listId: selectedList, movieId: movie.id, note });
-            await addMovieToList(selectedList, movie.id, note);
+            const result = await addMovieToList(selectedList, movie.id, note);
             console.log('Movie added successfully');
             setNote('');
             setSelectedList('');
+            setSuccessMessage(result.message);
             // Rafraîchir la liste des listes
             fetchLists();
         } catch (err) {
@@ -139,7 +142,7 @@ const MovieActions = ({ movie, onUpdate }) => {
                 </button>
             </div>
 
-            <form onSubmit={handleAddToList} className="space-y-3">
+            <form onSubmit={handleAddToList} className="space-y-4">
                 <select
                     value={selectedList}
                     onChange={(e) => setSelectedList(e.target.value)}
@@ -172,6 +175,12 @@ const MovieActions = ({ movie, onUpdate }) => {
             {error && (
                 <div className="text-red-500 text-sm bg-red-50 p-2 rounded">
                     {error}
+                </div>
+            )}
+            
+            {successMessage && (
+                <div className="text-green-500 text-sm bg-green-50 p-2 rounded">
+                    {successMessage}
                 </div>
             )}
         </div>
