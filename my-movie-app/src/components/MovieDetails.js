@@ -8,6 +8,8 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
   const [error, setError] = useState('');
+  const [reportModal, setReportModal] = useState(null);
+  const [reportData, setReportData] = useState({ reason: '', description: '' });
   const { user } = useAuth();
 
   // Fonction pour générer les étoiles
@@ -49,22 +51,56 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
+    setError('');
     try {
-      const response = await axiosInstance.post(`/movies/${movie.id}/add_review/`, newReview);
-      setReviews([response.data, ...reviews]);
+      const response = await axiosInstance.post(`/movies/${movie.id}/add_review/`, {
+        rating: newReview.rating,
+        comment: newReview.comment,
+        movie: movie.id
+      });
+      
+      // Mettre à jour la liste des commentaires
+      const updatedReviews = [response.data, ...reviews];
+      setReviews(updatedReviews);
+      
+      // Réinitialiser le formulaire
       setNewReview({ rating: 5, comment: '' });
-      setError('');
     } catch (error) {
-      setError(error.response?.data?.error || 'Une erreur est survenue');
+      console.error("Erreur lors de l'ajout du commentaire:", error);
+      setError(error.response?.data?.error || 'Une erreur est survenue lors de l\'ajout du commentaire');
     }
   };
 
   const handleDeleteReview = async (reviewId) => {
     try {
-      await axiosInstance.delete(`/movies/${movie.id}/delete_review/`);
-      setReviews(reviews.filter(review => review.id !== reviewId));
+      await axiosInstance.delete(`/movies/${movie.id}/delete_review/`, {
+        params: { review_id: reviewId }
+      });
+      const updatedReviews = reviews.filter(review => review.id !== reviewId);
+      setReviews(updatedReviews);
     } catch (error) {
       console.error("Erreur lors de la suppression du commentaire:", error);
+      setError('Une erreur est survenue lors de la suppression du commentaire');
+    }
+  };
+
+  const handleReportReview = async (reviewId) => {
+    try {
+      const response = await axiosInstance.post(`/movies/${movie.id}/report_review/`, {
+        review_id: reviewId,
+        reason: reportData.reason,
+        description: reportData.description
+      });
+      
+      // Mettre à jour l'état des commentaires
+      setReviews(reviews.map(review => 
+        review.id === reviewId ? { ...review, is_reported: true } : review
+      ));
+      
+      setReportModal(null);
+      setReportData({ reason: '', description: '' });
+    } catch (error) {
+      setError(error.response?.data?.error || 'Une erreur est survenue lors du signalement');
     }
   };
 
@@ -157,15 +193,26 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
                         {new Date(review.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    {user && review.user && user.username === review.user.username && (
-                      <button
-                        onClick={() => handleDeleteReview(review.id)}
-                        className="delete-review"
-                        title="Supprimer le commentaire"
-                      >
-                        Supprimer
-                      </button>
-                    )}
+                    <div className="review-actions">
+                      {user && review.user && user.username === review.user.username && (
+                        <button
+                          onClick={() => handleDeleteReview(review.id)}
+                          className="delete-review"
+                          title="Supprimer le commentaire"
+                        >
+                          Supprimer
+                        </button>
+                      )}
+                      {user && (!review.user || user.username !== review.user.username) && !review.is_reported && (
+                        <button
+                          onClick={() => setReportModal(review.id)}
+                          className="report-review"
+                          title="Signaler le commentaire"
+                        >
+                          Signaler
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <p className="review-comment">{review.comment}</p>
                 </div>
@@ -174,6 +221,46 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
           </div>
         </div>
       </div>
+
+      {/* Modal de signalement */}
+      {reportModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Signaler un commentaire</h3>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handleReportReview(reportModal);
+            }}>
+              <div className="form-group">
+                <label>Raison du signalement :</label>
+                <select
+                  value={reportData.reason}
+                  onChange={(e) => setReportData({...reportData, reason: e.target.value})}
+                  required
+                >
+                  <option value="">Sélectionnez une raison</option>
+                  <option value="spam">Spam</option>
+                  <option value="inappropriate">Contenu inapproprié</option>
+                  <option value="hate_speech">Discours haineux</option>
+                  <option value="other">Autre</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Description (optionnelle) :</label>
+                <textarea
+                  value={reportData.description}
+                  onChange={(e) => setReportData({...reportData, description: e.target.value})}
+                  placeholder="Décrivez la raison de votre signalement..."
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="button" onClick={() => setReportModal(null)}>Annuler</button>
+                <button type="submit">Signaler</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

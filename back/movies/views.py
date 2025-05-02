@@ -2,10 +2,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .tmdb import discover_movies, get_movie_details
 from rest_framework import status
-from .models import Movie, Review, List, MovieInList, Like, View
+from .models import Movie, Review, List, MovieInList, Like, View, Report
 from .serializers import (
     MovieSerializer, ReviewSerializer, ListSerializer, ListDetailSerializer,
-    MovieInListSerializer, LikeSerializer, ViewSerializer
+    MovieInListSerializer, LikeSerializer, ViewSerializer, ReportSerializer
 )
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions
@@ -131,8 +131,16 @@ class MovieViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['delete'])
     def delete_review(self, request, pk=None):
         movie = self.get_object()
+        review_id = request.query_params.get('review_id')
+        
+        if not review_id:
+            return Response(
+                {'error': 'ID du commentaire requis'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
         try:
-            review = Review.objects.get(user=request.user, movie=movie)
+            review = Review.objects.get(id=review_id, user=request.user, movie=movie)
             review.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Review.DoesNotExist:
@@ -234,6 +242,46 @@ class MovieViewSet(viewsets.ModelViewSet):
                 'status': 'unviewed',
                 'movie': serializer.data
             })
+
+    @action(detail=True, methods=['post'])
+    def report_review(self, request, pk=None):
+        movie = self.get_object()
+        review_id = request.data.get('review_id')
+        reason = request.data.get('reason')
+        description = request.data.get('description', '')
+
+        if not review_id or not reason:
+            return Response(
+                {'error': 'ID du commentaire et raison du signalement requis'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            review = Review.objects.get(id=review_id, movie=movie)
+            
+            # Vérifier si l'utilisateur a déjà signalé ce commentaire
+            if Report.objects.filter(user=request.user, review=review).exists():
+                return Response(
+                    {'error': 'Vous avez déjà signalé ce commentaire'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Créer le signalement
+            report = Report.objects.create(
+                user=request.user,
+                review=review,
+                reason=reason,
+                description=description
+            )
+
+            serializer = ReportSerializer(report)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Review.DoesNotExist:
+            return Response(
+                {'error': 'Commentaire non trouvé'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 class ListViewSet(viewsets.ModelViewSet):
     serializer_class = ListSerializer

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Movie, List, MovieInList, Like, View, Review
+from .models import Movie, List, MovieInList, Like, View, Review, Report
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -79,11 +79,27 @@ class ListDetailSerializer(ListSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     movie = MovieSerializer(read_only=True)
+    is_reported = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Review
-        fields = ['id', 'user', 'movie', 'rating', 'comment', 'created_at']
+        fields = ['id', 'user', 'movie', 'rating', 'comment', 'created_at', 'is_reported']
+        read_only_fields = ['created_at', 'is_reported']
+
+class ReportSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    review = ReviewSerializer(read_only=True)
+
+    class Meta:
+        model = Report
+        fields = ['id', 'user', 'review', 'reason', 'description', 'created_at']
         read_only_fields = ['created_at']
+
+    def create(self, validated_data):
+        report = Report.objects.create(**validated_data)
+        report.review.is_reported = True
+        report.review.save()
+        return report
 
 class LikeSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
