@@ -6,6 +6,8 @@ import './MovieDetails.css';
 
 const MovieDetails = ({ movie, onClose, onUpdate }) => {
   const [reviews, setReviews] = useState([]);
+  const [reportedReviews, setReportedReviews] = useState([]);
+  const [activeTab, setActiveTab] = useState('all'); // 'all' ou 'reported'
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
   const [error, setError] = useState('');
   const [reportModal, setReportModal] = useState(null);
@@ -37,16 +39,29 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
     return stars;
   };
 
+  const fetchReviews = async () => {
+    try {
+      const response = await axiosInstance.get(`/movies/${movie.id}/reviews/`);
+      setReviews(response.data);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des commentaires:", error);
+    }
+  };
+
+  const fetchReportedReviews = async () => {
+    try {
+      console.log("Fetching reported reviews for movie:", movie.id);
+      const response = await axiosInstance.get(`/movies/${movie.id}/reported_reviews/`);
+      console.log("Reported reviews response:", response.data);
+      setReportedReviews(response.data);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des commentaires signalés:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const response = await axiosInstance.get(`/movies/${movie.id}/reviews/`);
-        setReviews(response.data);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des commentaires:", error);
-      }
-    };
     fetchReviews();
+    fetchReportedReviews();
   }, [movie.id]);
 
   const handleSubmitReview = async (e) => {
@@ -59,11 +74,8 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
         movie: movie.id
       });
       
-      // Mettre à jour la liste des commentaires
       const updatedReviews = [response.data, ...reviews];
       setReviews(updatedReviews);
-      
-      // Réinitialiser le formulaire
       setNewReview({ rating: 5, comment: '' });
     } catch (error) {
       console.error("Erreur lors de l'ajout du commentaire:", error);
@@ -86,20 +98,25 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
 
   const handleReportReview = async (reviewId) => {
     try {
+      console.log("Reporting review:", reviewId);
       const response = await axiosInstance.post(`/movies/${movie.id}/report_review/`, {
         review_id: reviewId,
         reason: reportData.reason,
         description: reportData.description
       });
       
-      // Mettre à jour l'état des commentaires
+      console.log("Report response:", response.data);
+      
       setReviews(reviews.map(review => 
         review.id === reviewId ? { ...review, is_reported: true } : review
       ));
       
+      await fetchReportedReviews();
+      
       setReportModal(null);
       setReportData({ reason: '', description: '' });
     } catch (error) {
+      console.error("Erreur lors du signalement:", error);
       setError(error.response?.data?.error || 'Une erreur est survenue lors du signalement');
     }
   };
@@ -148,9 +165,22 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
         </div>
 
         <div className="reviews-section">
-          <h3>Commentaires</h3>
-          
-          {user && (
+          <div className="reviews-tabs">
+            <button 
+              className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
+              onClick={() => setActiveTab('all')}
+            >
+              Tous les commentaires
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'reported' ? 'active' : ''}`}
+              onClick={() => setActiveTab('reported')}
+            >
+              Commentaires signalés
+            </button>
+          </div>
+
+          {user && activeTab === 'all' && (
             <form onSubmit={handleSubmitReview} className="review-form">
               <div className="form-group">
                 <label>Note :</label>
@@ -178,45 +208,80 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
           )}
 
           <div className="reviews-list">
-            {reviews.length === 0 ? (
-              <p className="no-reviews">Aucun commentaire pour le moment. Soyez le premier à donner votre avis !</p>
-            ) : (
-              reviews.map(review => (
-                <div key={review.id} className="review">
-                  <div className="review-header">
-                    <div className="review-info">
-                      <span className="review-author">{review.user?.username}</span>
-                      <span className="review-rating">
-                        {renderStars(review.rating)}
-                      </span>
-                      <span className="review-date">
-                        {new Date(review.created_at).toLocaleDateString()}
-                      </span>
+            {activeTab === 'all' ? (
+              reviews.length === 0 ? (
+                <p className="no-reviews">Aucun commentaire pour le moment. Soyez le premier à donner votre avis !</p>
+              ) : (
+                reviews.map(review => (
+                  <div key={review.id} className="review">
+                    <div className="review-header">
+                      <div className="review-info">
+                        <span className="review-author">{review.user?.username}</span>
+                        <span className="review-rating">
+                          {renderStars(review.rating)}
+                        </span>
+                        <span className="review-date">
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="review-actions">
+                        {user && review.user && user.username === review.user.username && (
+                          <button
+                            onClick={() => handleDeleteReview(review.id)}
+                            className="delete-review"
+                            title="Supprimer le commentaire"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                        {user && (!review.user || user.username !== review.user.username) && !review.is_reported && (
+                          <button
+                            onClick={() => setReportModal(review.id)}
+                            className="report-review"
+                            title="Signaler le commentaire"
+                          >
+                            Signaler
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="review-actions">
-                      {user && review.user && user.username === review.user.username && (
-                        <button
-                          onClick={() => handleDeleteReview(review.id)}
-                          className="delete-review"
-                          title="Supprimer le commentaire"
-                        >
-                          Supprimer
-                        </button>
-                      )}
-                      {user && (!review.user || user.username !== review.user.username) && !review.is_reported && (
-                        <button
-                          onClick={() => setReportModal(review.id)}
-                          className="report-review"
-                          title="Signaler le commentaire"
-                        >
-                          Signaler
-                        </button>
-                      )}
-                    </div>
+                    <p className="review-comment">{review.comment}</p>
                   </div>
-                  <p className="review-comment">{review.comment}</p>
-                </div>
-              ))
+                ))
+              )
+            ) : (
+              reportedReviews.length === 0 ? (
+                <p className="no-reviews">Aucun commentaire signalé pour le moment.</p>
+              ) : (
+                reportedReviews.map(review => (
+                  <div key={review.id} className="review reported">
+                    <div className="review-header">
+                      <div className="review-info">
+                        <span className="review-author">{review.user?.username}</span>
+                        <span className="review-rating">
+                          {renderStars(review.rating)}
+                        </span>
+                        <span className="review-date">
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </span>
+                        <span className="reported-badge">Signalé</span>
+                      </div>
+                      <div className="review-actions">
+                        {user && review.user && user.username === review.user.username && (
+                          <button
+                            onClick={() => handleDeleteReview(review.id)}
+                            className="delete-review"
+                            title="Supprimer le commentaire"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <p className="review-comment">{review.comment}</p>
+                  </div>
+                ))
+              )
             )}
           </div>
         </div>

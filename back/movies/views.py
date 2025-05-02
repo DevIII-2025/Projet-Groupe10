@@ -274,6 +274,10 @@ class MovieViewSet(viewsets.ModelViewSet):
                 description=description
             )
 
+            # Mettre à jour le statut du commentaire
+            review.is_reported = True
+            review.save()
+
             serializer = ReportSerializer(report)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -282,6 +286,19 @@ class MovieViewSet(viewsets.ModelViewSet):
                 {'error': 'Commentaire non trouvé'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+    @action(detail=True, methods=['get'])
+    def reported_reviews(self, request, pk=None):
+        movie = self.get_object()
+        reported_reviews = Review.objects.filter(movie=movie, is_reported=True)
+        serializer = ReviewSerializer(reported_reviews, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def all_reported_reviews(self, request):
+        reported_reviews = Review.objects.filter(is_reported=True)
+        serializer = ReviewSerializer(reported_reviews, many=True, context={'request': request})
+        return Response(serializer.data)
 
 class ListViewSet(viewsets.ModelViewSet):
     serializer_class = ListSerializer

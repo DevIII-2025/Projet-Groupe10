@@ -97,8 +97,9 @@ class ReportSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         report = Report.objects.create(**validated_data)
-        report.review.is_reported = True
-        report.review.save()
+        review = report.review
+        review.is_reported = True
+        review.save()
         return report
 
 class LikeSerializer(serializers.ModelSerializer):
