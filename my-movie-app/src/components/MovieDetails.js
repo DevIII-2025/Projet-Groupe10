@@ -12,6 +12,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
   const [error, setError] = useState('');
   const [reportModal, setReportModal] = useState(null);
   const [reportData, setReportData] = useState({ reason: '', description: '' });
+  const [selectedReport, setSelectedReport] = useState(null);
   const { user } = useAuth();
 
   // Fonction pour générer les étoiles
@@ -50,12 +51,17 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
 
   const fetchReportedReviews = async () => {
     try {
-      console.log("Fetching reported reviews for movie:", movie.id);
-      const response = await axiosInstance.get(`/movies/${movie.id}/reported_reviews/`);
-      console.log("Reported reviews response:", response.data);
-      setReportedReviews(response.data);
+      if (user?.is_staff) {
+        console.log("Fetching reported reviews for movie:", movie.id);
+        const response = await axiosInstance.get(`/movies/${movie.id}/reported_reviews/`);
+        console.log("Reported reviews response:", response.data);
+        setReportedReviews(response.data);
+      }
     } catch (error) {
       console.error("Erreur lors de la récupération des commentaires signalés:", error);
+      if (error.response?.status === 403) {
+        setError("Accès non autorisé. Seuls les administrateurs peuvent voir les commentaires signalés.");
+      }
     }
   };
 
@@ -88,8 +94,8 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
       await axiosInstance.delete(`/movies/${movie.id}/delete_review/`, {
         params: { review_id: reviewId }
       });
-      const updatedReviews = reviews.filter(review => review.id !== reviewId);
-      setReviews(updatedReviews);
+      setReviews(reviews.filter(review => review.id !== reviewId));
+      setReportedReviews(reportedReviews.filter(review => review.id !== reviewId));
     } catch (error) {
       console.error("Erreur lors de la suppression du commentaire:", error);
       setError('Une erreur est survenue lors de la suppression du commentaire');
@@ -128,6 +134,11 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
 
   return (
     <div className="movie-details-modal">
+      {user?.is_staff && (
+        <div className="admin-banner">
+          <strong>Vous êtes connecté en tant qu'administrateur.</strong>
+        </div>
+      )}
       <div className="movie-header">
         <h2 className="movie-title">{movie.title}</h2>
         <button onClick={onClose} className="close-button">&times;</button>
@@ -172,12 +183,14 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
             >
               Tous les commentaires
             </button>
-            <button 
-              className={`tab-button ${activeTab === 'reported' ? 'active' : ''}`}
-              onClick={() => setActiveTab('reported')}
-            >
-              Commentaires signalés
-            </button>
+            {user?.is_staff && (
+              <button 
+                className={`tab-button ${activeTab === 'reported' ? 'active' : ''}`}
+                onClick={() => setActiveTab('reported')}
+              >
+                Commentaires signalés
+              </button>
+            )}
           </div>
 
           {user && activeTab === 'all' && (
@@ -225,7 +238,9 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
                         </span>
                       </div>
                       <div className="review-actions">
-                        {user && review.user && user.username === review.user.username && (
+                        {user && (
+                          review.user && user.username === review.user.username || user.is_staff
+                        ) && (
                           <button
                             onClick={() => handleDeleteReview(review.id)}
                             className="delete-review"
@@ -267,7 +282,9 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
                         <span className="reported-badge">Signalé</span>
                       </div>
                       <div className="review-actions">
-                        {user && review.user && user.username === review.user.username && (
+                        {user && (
+                          review.user && user.username === review.user.username || user.is_staff
+                        ) && (
                           <button
                             onClick={() => handleDeleteReview(review.id)}
                             className="delete-review"

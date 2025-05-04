@@ -14,6 +14,8 @@ import logging
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db import models
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ def movie_details(request, movie_id):
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]
     pagination_class = MoviePagination
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['title', 'description']
@@ -62,20 +64,12 @@ class MovieViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Movie.objects.all()
-        search = self.request.query_params.get('search', None)
-        release_year = self.request.query_params.get('release_year', None)
-        
-        # Add annotation for review average
-        queryset = queryset.annotate(
-            review_avg=models.Avg('reviews__rating')
-        )
-        
-        if search:
-            queryset = queryset.filter(title__icontains=search)
-            
-        if release_year and release_year.isdigit():
-            queryset = queryset.filter(release_year=int(release_year))
-            
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
         return queryset
 
     def get_serializer_context(self):
@@ -89,8 +83,8 @@ class MovieViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def reviews(self, request, pk=None):
         movie = self.get_object()
-        reviews = Review.objects.filter(movie=movie).order_by('-created_at')
-        serializer = ReviewSerializer(reviews, many=True, context={'request': request})
+        reviews = Review.objects.filter(movie=movie)
+        serializer = ReviewSerializer(reviews, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
@@ -140,7 +134,11 @@ class MovieViewSet(viewsets.ModelViewSet):
             )
             
         try:
-            review = Review.objects.get(id=review_id, user=request.user, movie=movie)
+            # Si admin, il peut supprimer n'importe quel commentaire
+            if request.user.is_staff:
+                review = Review.objects.get(id=review_id, movie=movie)
+            else:
+                review = Review.objects.get(id=review_id, user=request.user, movie=movie)
             review.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Review.DoesNotExist:
@@ -289,9 +287,33 @@ class MovieViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def reported_reviews(self, request, pk=None):
+        if not request.user.is_staff:
+            return Response(
+                {'error': 'Accès non autorisé. Seuls les administrateurs peuvent voir les commentaires signalés.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         movie = self.get_object()
-        reported_reviews = Review.objects.filter(movie=movie, is_reported=True)
-        serializer = ReviewSerializer(reported_reviews, many=True, context={'request': request})
+        reviews = Review.objects.filter(movie=movie, is_reported=True)
+        serializer = ReviewSerializer(reviews, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def reports(self, request, pk=None):
+        if not request.user.is_staff:
+            return Response(
+                {'error': 'Accès non autorisé. Seuls les administrateurs peuvent voir les signalements.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        movie = self.get_object()
+        review_id = request.query_params.get('review_id')
+        if not review_id:
+            return Response({'error': 'review_id est requis'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        review = get_object_or_404(Review, id=review_id, movie=movie)
+        reports = Report.objects.filter(review=review)
+        serializer = ReportSerializer(reports, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])

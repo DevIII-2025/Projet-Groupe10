@@ -40,6 +40,7 @@ const customStyles = {
 
 function ProtectedApp() {
   const { user, loading } = useAuth();
+  console.log("USER CONTEXT :", user);
   const [movies, setMovies] = useState([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -290,7 +291,7 @@ function ProtectedApp() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-4xl font-bold text-blue-600">Films disponibles</h1>
           <div className="flex items-center gap-4">
-            <p className="text-sm text-gray-600">
+            <p className={`text-sm px-3 py-1 rounded ${user?.is_staff ? 'admin-logged' : 'text-gray-600'}`}>
               Connecté en tant que <strong>{user.username}</strong>
             </p>
             <ProfileButton />

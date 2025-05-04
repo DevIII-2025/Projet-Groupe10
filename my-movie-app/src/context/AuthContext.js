@@ -11,7 +11,10 @@ export const AuthProvider = ({ children }) => {
     try {
       if (isAuthenticated()) {
         const res = await getMe();
-        setUser(res.data);
+        setUser({
+          ...res.data,
+          is_staff: res.data.is_staff || false
+        });
       } else {
         setUser(null);
       }

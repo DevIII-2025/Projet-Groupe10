@@ -101,7 +101,10 @@ class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        return Response({"username": request.user.username})
+        return Response({
+            "username": request.user.username,
+            "is_staff": request.user.is_staff
+        })
 
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
