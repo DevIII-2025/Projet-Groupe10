@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import MovieActions from './MovieActions';
 import './MovieDetails.css';
 
+const defaultImage = require('../images/image_par_defaut.png');
+
 const MovieDetails = ({ movie, onClose, onUpdate }) => {
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
@@ -82,7 +84,15 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
       
       <div className="movie-content">
         <div className="movie-main-info">
-          <img src={movie.poster_url} alt={movie.title} className="movie-poster"/>
+          <img
+            src={movie.poster_url || defaultImage}
+            alt={movie.title}
+            className="w-full rounded-lg shadow-lg"
+            onError={(e) => {
+              e.target.src = defaultImage;
+              e.target.onerror = null;
+            }}
+          />
           <div className="movie-text">
             <p className="movie-year"><strong>Année :</strong> {movie.release_year}</p>
             <p className="movie-genre"><strong>Genre :</strong> {movie.genre}</p>

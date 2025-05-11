@@ -3,6 +3,8 @@ import Modal from 'react-modal';
 import MovieActions from './MovieActions';
 import axiosInstance from '../api/axiosConfig';
 
+const defaultImage = require('../images/image_par_defaut.png');
+
 // Configuration du modal
 Modal.setAppElement('#root');
 
@@ -83,11 +85,11 @@ export default function MovieList() {
           >
             <div className="relative">
               <img
-                src={movie.poster_url}
+                src={movie.poster_url || defaultImage}
                 alt={movie.title}
                 className="w-full h-[300px] object-cover rounded-lg shadow-lg"
                 onError={(e) => {
-                  e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
+                  e.target.src = defaultImage;
                   e.target.onerror = null;
                 }}
               />
@@ -124,7 +126,7 @@ export default function MovieList() {
                   alt={selectedMovie.title}
                   className="w-full rounded-lg shadow-lg"
                   onError={(e) => {
-                    e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
+                    e.target.src = "./images/image_par_defaut.png";
                     e.target.onerror = null;
                   }}
                 />
