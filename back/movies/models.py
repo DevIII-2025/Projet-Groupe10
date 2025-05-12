@@ -71,6 +71,7 @@ class Review(models.Model):
     rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])  # Note sur 5
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
     is_reported = models.BooleanField(default=False)
 
     def __str__(self):
@@ -96,3 +97,4 @@ class Report(models.Model):
 
     def __str__(self):
         return f"Report by {self.user.username} on review {self.review.id}"
+

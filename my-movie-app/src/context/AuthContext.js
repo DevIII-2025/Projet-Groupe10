@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
           ...res.data,
           is_staff: res.data.is_staff || false
         });
+
       } else {
         setUser(null);
       }

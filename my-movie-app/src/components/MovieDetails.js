@@ -13,6 +13,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
   const [reportModal, setReportModal] = useState(null);
   const [reportData, setReportData] = useState({ reason: '', description: '' });
   const [selectedReport, setSelectedReport] = useState(null);
+
   const { user } = useAuth();
 
   // Fonction pour générer les étoiles
@@ -68,6 +69,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
   useEffect(() => {
     fetchReviews();
     fetchReportedReviews();
+    
   }, [movie.id]);
 
   const handleSubmitReview = async (e) => {
@@ -86,6 +88,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
     } catch (error) {
       console.error("Erreur lors de l'ajout du commentaire:", error);
       setError(error.response?.data?.error || 'Une erreur est survenue lors de l\'ajout du commentaire');
+
     }
   };
 
@@ -124,6 +127,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
     } catch (error) {
       console.error("Erreur lors du signalement:", error);
       setError(error.response?.data?.error || 'Une erreur est survenue lors du signalement');
+
     }
   };
 
@@ -139,6 +143,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
           <strong>Vous êtes connecté en tant qu'administrateur.</strong>
         </div>
       )}
+
       <div className="movie-header">
         <h2 className="movie-title">{movie.title}</h2>
         <button onClick={onClose} className="close-button">&times;</button>
@@ -147,6 +152,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
       <div className="movie-content">
         <div className="movie-main-info">
           <img src={movie.poster_url} alt={movie.title} className="movie-poster"/>
+
           <div className="movie-text">
             <p className="movie-year"><strong>Année :</strong> {movie.release_year}</p>
             <p className="movie-genre"><strong>Genre :</strong> {movie.genre}</p>
@@ -194,6 +200,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
           </div>
 
           {user && activeTab === 'all' && (
+
             <form onSubmit={handleSubmitReview} className="review-form">
               <div className="form-group">
                 <label>Note :</label>
@@ -299,6 +306,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
                   </div>
                 ))
               )
+
             )}
           </div>
         </div>
@@ -343,6 +351,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

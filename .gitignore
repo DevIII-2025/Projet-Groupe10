@@ -1,17 +1,15 @@
 # Node modules
 node_modules/
 
-
 migrations/
 
 # Build directories
 build/
 dist/
 
-venv/
-
 # Dependency directories
 jspm_packages/
+venv/
 
 # TypeScript cache
 *.tsbuildinfo
@@ -66,14 +64,8 @@ db.sqlite3-journal
 
 migrations/00*
 
-
 # Media files
 media/
 
 # Static files
 staticfiles/
-
-#venv
-venv/
-
-# re test comment bidon

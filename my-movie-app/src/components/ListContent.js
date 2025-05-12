@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { getList, removeMovieFromList } from '../api/listAPI';
 
+
 const ListContent = ({ list, onBack }) => {
     const [listContent, setListContent] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+
 
     useEffect(() => {
         if (list?.id) {
@@ -13,6 +15,7 @@ const ListContent = ({ list, onBack }) => {
     }, [list?.id]);
 
     const fetchListContent = async () => {
+
         try {
             console.log('Fetching list content for list:', list.id);
             const data = await getList(list.id);
@@ -31,7 +34,14 @@ const ListContent = ({ list, onBack }) => {
         } finally {
             setLoading(false);
         }
-    };
+
+    }, [list?.id]);
+
+    useEffect(() => {
+        if (list?.id) {
+            fetchListContent();
+        }
+    }, [list?.id, fetchListContent]);
 
     const handleRemoveMovie = async (movieId) => {
         if (!window.confirm('Êtes-vous sûr de vouloir retirer ce film de la liste ?')) return;
@@ -119,6 +129,7 @@ const ListContent = ({ list, onBack }) => {
                                 className="w-24 h-36 object-cover rounded"
                                 onError={(e) => {
                                     e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
+
                                     e.target.onerror = null;
                                 }}
                             />
@@ -135,6 +146,7 @@ const ListContent = ({ list, onBack }) => {
                                 )}
                             </div>
                             <button
+
                                 onClick={() => handleRemoveMovie(movie.id)}
                                 className="px-3 py-1 text-red-500 hover:text-red-700"
                             >

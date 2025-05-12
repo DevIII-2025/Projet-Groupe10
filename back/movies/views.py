@@ -6,6 +6,7 @@ from .models import Movie, Review, List, MovieInList, Like, View, Report
 from .serializers import (
     MovieSerializer, ReviewSerializer, ListSerializer, ListDetailSerializer,
     MovieInListSerializer, LikeSerializer, ViewSerializer, ReportSerializer
+
 )
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions
@@ -16,6 +17,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db import models
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.db.models import Q
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +57,9 @@ def movie_details(request, movie_id):
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
+
     permission_classes = [IsAuthenticated]
+
     pagination_class = MoviePagination
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['title', 'description']
@@ -64,6 +68,7 @@ class MovieViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Movie.objects.all()
+
         search_query = self.request.query_params.get('search', None)
         if search_query:
             queryset = queryset.filter(
@@ -83,8 +88,10 @@ class MovieViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def reviews(self, request, pk=None):
         movie = self.get_object()
+
         reviews = Review.objects.filter(movie=movie)
         serializer = ReviewSerializer(reviews, many=True)
+
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
@@ -125,6 +132,7 @@ class MovieViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['delete'])
     def delete_review(self, request, pk=None):
         movie = self.get_object()
+
         review_id = request.query_params.get('review_id')
         
         if not review_id:
@@ -139,6 +147,7 @@ class MovieViewSet(viewsets.ModelViewSet):
                 review = Review.objects.get(id=review_id, movie=movie)
             else:
                 review = Review.objects.get(id=review_id, user=request.user, movie=movie)
+
             review.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Review.DoesNotExist:
@@ -321,6 +330,7 @@ class MovieViewSet(viewsets.ModelViewSet):
         reported_reviews = Review.objects.filter(is_reported=True)
         serializer = ReviewSerializer(reported_reviews, many=True, context={'request': request})
         return Response(serializer.data)
+
 
 class ListViewSet(viewsets.ModelViewSet):
     serializer_class = ListSerializer

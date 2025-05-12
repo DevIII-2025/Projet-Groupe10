@@ -3,6 +3,7 @@ import Modal from 'react-modal';
 import MovieActions from './MovieActions';
 import axiosInstance from '../api/axiosConfig';
 
+
 // Configuration du modal
 Modal.setAppElement('#root');
 
@@ -88,6 +89,7 @@ export default function MovieList() {
                 className="w-full h-[300px] object-cover rounded-lg shadow-lg"
                 onError={(e) => {
                   e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
+
                   e.target.onerror = null;
                 }}
               />
@@ -125,6 +127,8 @@ export default function MovieList() {
                   className="w-full rounded-lg shadow-lg"
                   onError={(e) => {
                     e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
+
+                    
                     e.target.onerror = null;
                   }}
                 />
