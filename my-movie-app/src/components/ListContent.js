@@ -1,14 +1,21 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getList, removeMovieFromList } from '../api/listAPI';
 
-const defaultImage = require('../images/image_par_defaut.png');
 
 const ListContent = ({ list, onBack }) => {
     const [listContent, setListContent] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const fetchListContent = useCallback(async () => {
+
+    useEffect(() => {
+        if (list?.id) {
+            fetchListContent();
+        }
+    }, [list?.id]);
+
+    const fetchListContent = async () => {
+
         try {
             console.log('Fetching list content for list:', list.id);
             const data = await getList(list.id);
@@ -27,6 +34,7 @@ const ListContent = ({ list, onBack }) => {
         } finally {
             setLoading(false);
         }
+
     }, [list?.id]);
 
     useEffect(() => {
@@ -116,11 +124,12 @@ const ListContent = ({ list, onBack }) => {
                             className="flex items-start gap-4 p-4 bg-white rounded shadow hover:shadow-md transition-shadow"
                         >
                             <img
-                                src={movie.poster_url || defaultImage}
+                                src={movie.poster_url}
                                 alt={movie.title}
                                 className="w-24 h-36 object-cover rounded"
                                 onError={(e) => {
-                                    e.target.src = defaultImage;
+                                    e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
+
                                     e.target.onerror = null;
                                 }}
                             />
@@ -136,7 +145,8 @@ const ListContent = ({ list, onBack }) => {
                                     </p>
                                 )}
                             </div>
-                           <button
+                            <button
+
                                 onClick={() => handleRemoveMovie(movie.id)}
                                 className="px-3 py-1 text-red-500 hover:text-red-700"
                             >

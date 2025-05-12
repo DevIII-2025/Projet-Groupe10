@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Movie, Review, List, MovieInList, Like, View
+signalement
+from .models import Movie, Review, List, MovieInList, Like, View, Report
+
 
 admin.site.register(Movie)
 admin.site.register(Review)
@@ -7,6 +9,7 @@ admin.site.register(List)
 admin.site.register(MovieInList)
 admin.site.register(Like)
 admin.site.register(View)
+admin.site.register(Report)
 
 # from django.contrib import admin
 # from .models import Movie

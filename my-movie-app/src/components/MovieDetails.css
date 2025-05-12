@@ -441,4 +441,154 @@
 .rating-count {
   color: #666;
   font-size: 14px;
+}
+
+.review-actions {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.report-review {
+  background: #ffc107;
+  color: #333;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.report-review:hover {
+  background: #e0a800;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modal-actions button[type="button"] {
+  background: #6c757d;
+  color: white;
+  border: none;
+}
+
+.modal-actions button[type="button"]:hover {
+  background: #5a6268;
+}
+
+.modal-actions button[type="submit"] {
+  background: #ffc107;
+  color: #333;
+  border: none;
+}
+
+.modal-actions button[type="submit"]:hover {
+  background: #e0a800;
+}
+
+.reviews-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+  position: relative;
+}
+
+.tab-button.active {
+  color: #ffc107;
+  font-weight: bold;
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -11px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #ffc107;
+}
+
+.review.reported {
+  border-left: 4px solid #ffc107;
+  background-color: rgba(255, 193, 7, 0.05);
+}
+
+.reported-badge {
+  background: #ffc107;
+  color: #333;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-left: 10px;
+}
+
+.admin-banner {
+  background: #ffe066;
+  color: #856404;
+  padding: 12px 0;
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: bold;
+  border-bottom: 2px solid #ffd700;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 10px;
+}
+
+.admin-logged {
+  background: #ffe066;
+  color: #856404;
+  font-weight: bold;
+  border: 1px solid #ffd700;
+
+  
 } 

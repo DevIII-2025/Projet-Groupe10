@@ -9,9 +9,7 @@ dist/
 
 # Dependency directories
 jspm_packages/
-
 venv/
-
 
 # TypeScript cache
 *.tsbuildinfo
@@ -33,10 +31,7 @@ venv/
 
 # dotenv environment variables file
 .env
-<<<<<<< HEAD
 .env.dev
-=======
->>>>>>> 3fd57e8 (.gitignore)
 .env.local
 .env.development.local
 .env.test.local
@@ -64,27 +59,13 @@ Thumbs.db
 __pycache__/
 local_settings.py
 db.sqlite3
-<<<<<<< HEAD
 db_dev.sqlite3
 db.sqlite3-journal
 
 migrations/00*
 
-
-=======
-db.sqlite3-journal
-
->>>>>>> 3fd57e8 (.gitignore)
 # Media files
 media/
 
 # Static files
 staticfiles/
-
-<<<<<<< HEAD
-#venv
-venv/
-
-# re test comment bidon
-=======
->>>>>>> 3fd57e8 (.gitignore)
