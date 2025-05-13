@@ -272,9 +272,18 @@ class MovieViewSet(viewsets.ModelViewSet):
                 description=description
             )
 
-            # Mettre à jour le statut du commentaire
+            # Mettre à jour le statut du commentaire et le compteur de signalements
             review.is_reported = True
+            review.report_count += 1
             review.save()
+
+            # Si le nombre de signalements atteint 10, supprimer le commentaire
+            if review.report_count >= 10:
+                review.delete()
+                return Response(
+                    {'message': 'Le commentaire a été supprimé automatiquement suite à trop de signalements'},
+                    status=status.HTTP_200_OK
+                )
 
             serializer = ReportSerializer(report)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
