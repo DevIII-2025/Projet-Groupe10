@@ -84,3 +84,20 @@ REACT_APP_BACKEND_URL=http://localhost:8000
 
 c'est tout 
 
+<!-- pour lancer la commande dans le vps et qu'il tourne tout le temps c'est : -->
+python manage.py runserver &
+npm start &
+
+<!-- et pour en sortir c'est :  -->
+fg
+
+<!-- commandes déploiement production -->
+<!-- 1.	On your local or CI machine, run: -->
+cd ~/Project-groupe10
+git archive --format=tar.gz --output=main.tar.gz main
+<!-- 2.	Send it to the server: -->
+scp main.tar.gz ovh2:/tmp/
+<!-- 3.	SSH into server and unpack: -->
+ssh ovh2
+cd Projet-Groupe10
+tar -xzf /tmp/main.tar.gz 

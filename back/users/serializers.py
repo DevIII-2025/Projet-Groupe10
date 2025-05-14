@@ -22,11 +22,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         if not api_key:
             raise serializers.ValidationError("Clé API MailboxLayer manquante.")
 
-        url = f"http://apilayer.net/api/check?access_key={api_key}&email={value}&smtp=1&format=1"
+        # url = f"http://apilayer.net/api/check?access_key={api_key}&email={value}&smtp=1&format=1"
+        url = f"https://api.apilayer.com/email_verification/{value}"
+
+
+        # return value
         try:
-            response = requests.get(url, timeout=10)
+            headers = {'apikey': api_key}
+            response = requests.get(url, headers=headers, timeout=10)
+            # response = requests.get(url, timeout=10)
             result = response.json()
-            if not result.get("smtp_check", False):
+            # if not result.get("smtp_check", False):
+            if not result.get("can_connect_smtp", False):
                 raise serializers.ValidationError("Cette adresse email ne semble pas valide ou existante.")
         except requests.RequestException:
             raise serializers.ValidationError("Erreur lors de la vérification de l'adresse email.")
