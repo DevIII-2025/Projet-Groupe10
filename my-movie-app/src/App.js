@@ -343,7 +343,6 @@ function ProtectedApp() {
                     Filtrer
                   </button>
                   
-                  {showFilterDropdown && (
                     <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50 p-4">
                       <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-bold mb-2">
