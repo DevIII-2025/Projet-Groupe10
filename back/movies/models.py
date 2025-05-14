@@ -72,6 +72,7 @@ class Review(models.Model):
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_reported = models.BooleanField(default=False)
+    report_count = models.IntegerField(default=0)  # Nombre de signalements
 
     def __str__(self):
         return f"Review by {self.user.username} on {self.movie.title}"
