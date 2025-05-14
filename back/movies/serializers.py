@@ -80,12 +80,11 @@ class ReviewSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     movie = MovieSerializer(read_only=True)
     is_reported = serializers.BooleanField(read_only=True)
-    report_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Review
-        fields = ['id', 'user', 'movie', 'rating', 'comment', 'created_at', 'is_reported', 'report_count']
-        read_only_fields = ['created_at', 'is_reported', 'report_count']
+        fields = ['id', 'user', 'movie', 'rating', 'comment', 'created_at', 'is_reported']
+        read_only_fields = ['created_at', 'is_reported']
 
 class ReportSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
