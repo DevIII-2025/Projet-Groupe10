@@ -106,3 +106,11 @@ source venv/bin/activate
 python manage.py makemigrations
 python manage.py migrate
 python manage.py runserver 
+
+
+----------------------------------------------------------------
+
+pour lancer les tests :
+cd back
+python manage.py test
+coverage report
