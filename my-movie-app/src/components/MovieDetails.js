@@ -113,9 +113,9 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
       
       console.log("Report response:", response.data);
       
-      setReviews(reviews.map(review => 
-        review.id === reviewId ? { ...review, is_reported: true } : review
-      ));
+        setReviews(reviews.map(review => 
+          review.id === reviewId ? { ...review, is_reported: true } : review
+        ));
       
       await fetchReportedReviews();
       

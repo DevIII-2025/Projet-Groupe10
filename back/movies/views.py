@@ -256,14 +256,12 @@ class MovieViewSet(viewsets.ModelViewSet):
 
         try:
             review = Review.objects.get(id=review_id, movie=movie)
-            
             # Vérifier si l'utilisateur a déjà signalé ce commentaire
             if Report.objects.filter(user=request.user, review=review).exists():
                 return Response(
                     {'error': 'Vous avez déjà signalé ce commentaire'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
             # Créer le signalement
             report = Report.objects.create(
                 user=request.user,
@@ -271,14 +269,11 @@ class MovieViewSet(viewsets.ModelViewSet):
                 reason=reason,
                 description=description
             )
-
             # Mettre à jour le statut du commentaire
             review.is_reported = True
             review.save()
-
             serializer = ReportSerializer(report)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         except Review.DoesNotExist:
             return Response(
                 {'error': 'Commentaire non trouvé'},
