@@ -104,21 +104,27 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
 
   const handleReportReview = async (reviewId) => {
     try {
-      console.log("Reporting review:", reviewId);
       const response = await axiosInstance.post(`/movies/${movie.id}/report_review/`, {
         review_id: reviewId,
         reason: reportData.reason,
         description: reportData.description
       });
-      
-      console.log("Report response:", response.data);
-      
-        setReviews(reviews.map(review => 
-          review.id === reviewId ? { ...review, is_reported: true } : review
+
+      // Si le commentaire a été supprimé automatiquement
+      if (response.data.message && response.data.message.includes('supprimé automatiquement')) {
+        setReviews(reviews.filter(review => review.id !== reviewId));
+        setReportedReviews(reportedReviews.filter(review => review.id !== reviewId));
+      } else {
+        // Sinon, mettre à jour le statut du commentaire
+        setReviews(reviews.map(review =>
+          review.id === reviewId
+            ? { ...review, is_reported: true, report_count: (review.report_count || 0) + 1 }
+            : review
         ));
-      
+      }
+
       await fetchReportedReviews();
-      
+
       setReportModal(null);
       setReportData({ reason: '', description: '' });
     } catch (error) {
