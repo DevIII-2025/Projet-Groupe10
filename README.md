@@ -93,7 +93,7 @@ fg
 
 <!-- commandes déploiement production -->
 <!-- 1.	On your local or CI machine, run: -->
-cd ~/Project-groupe10
+cd C:\Users\Gaspard\OneDrive\Ephec\3T\Projet-Groupe10\
 git archive --format=tar.gz --output=main.tar.gz main
 <!-- 2.	Send it to the server: -->
 scp main.tar.gz ovh2:/tmp/
@@ -101,3 +101,8 @@ scp main.tar.gz ovh2:/tmp/
 ssh ovh2
 cd Projet-Groupe10
 tar -xzf /tmp/main.tar.gz 
+cd back
+source venv/bin/activate 
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver 

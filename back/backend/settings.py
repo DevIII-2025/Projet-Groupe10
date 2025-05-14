@@ -34,7 +34,7 @@ current_branch = get_current_git_branch()
 print("current_branch:",current_branch)
 
 # Chargement des variables d'environnement
-if current_branch == "dev":
+if current_branch in ["dev", "dev_stable"]   :
     load_dotenv(BASE_DIR / ".env.dev")
 else:
     load_dotenv(BASE_DIR / ".env")
