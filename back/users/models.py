@@ -14,6 +14,6 @@ class EmailVerification(models.Model):
 class PendingUser(models.Model):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=150)
-    password = models.CharField(max_length=128)  # hashed later
+    password = models.CharField(max_length=128)  
     verification_code = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
