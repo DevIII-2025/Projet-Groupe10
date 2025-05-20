@@ -12,6 +12,8 @@ import ListContent from "./components/ListContent";
 import MovieActions from "./components/MovieActions";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import axiosInstance from './api/axiosConfig';
+import { Toaster } from "react-hot-toast";
+
 
 Modal.setAppElement('#root');
 
@@ -743,6 +745,9 @@ function App() {
   return (
     <Router>
       <AuthProvider>
+        {/* Toaster global */}
+        <Toaster position="top-center" />
+
         <Routes>
           <Route path="/login" element={<LoginForm />} />
           <Route path="/register" element={<Register />} />

@@ -120,3 +120,4 @@ export const markMovieAsViewed = async (movieId) => {
         throw new Error(error.response?.data?.detail || 'Erreur lors du marquage comme vu');
     }
 }; 
+
