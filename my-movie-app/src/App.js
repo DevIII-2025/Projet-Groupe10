@@ -660,15 +660,26 @@ function ProtectedApp() {
             <h2 className="text-2xl font-semibold mt-8">Ajouter un film</h2>
             <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 mt-4 w-full">
               <div className="grid grid-cols-3 gap-4">
-                <input 
-                  type="text" 
-                  placeholder="Titre" 
-                  value={title} 
-                  onChange={(e) => setTitle(e.target.value)} 
-                  required 
-                  className="border p-2 w-full rounded" 
-                  maxLength={200}
-                />
+                <div className="flex flex-col">
+                  <label className="mb-1 flex items-center">
+                    Titre
+                    <span className="ml-2 text-xs text-gray-500">
+                      (max 200 caractères)
+                    </span>
+                    <span className="ml-auto text-xs text-gray-500">
+                      {title.length}/200
+                    </span>
+                  </label>
+                  <input 
+                    type="text" 
+                    placeholder="Titre" 
+                    value={title} 
+                    onChange={(e) => setTitle(e.target.value)} 
+                    required 
+                    className="border p-2 w-full rounded" 
+                    maxLength={200}
+                  />
+                </div>
                 <input 
                   type="text" 
                   placeholder="Description" 
@@ -695,6 +706,7 @@ function ProtectedApp() {
                   onChange={(e) => setPosterUrl(e.target.value)} 
                   required 
                   className="border p-2 w-full rounded"
+                  maxLength={200}
                 />
               </div>
               <button 
