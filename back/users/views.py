@@ -71,7 +71,7 @@ class LoginView(APIView):
 
         logger.warning(f"Échec de la connexion pour: {username_or_email}")
         return Response(
-            {"detail": "Invalid credentials"}, 
+            {"detail": "Échec de la connexion. Vérifiez vos identifiants."}, 
             status=status.HTTP_401_UNAUTHORIZED
         )
 
