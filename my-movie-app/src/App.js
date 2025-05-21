@@ -559,19 +559,24 @@ function ProtectedApp() {
                     {movies.map((movie) => (
                       <div 
                         key={movie.id} 
-                        className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col items-center p-4"
+                        className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl relative group"
+                        onClick={() => openModal(movie.id)}
                       >
-                        <img
-                          src={movie.poster_url}
-                          alt={movie.title}
-                          className="w-full h-64 object-cover mb-4 rounded"
-                          onError={(e) => {
-                            e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
-                            e.target.onerror = null;
-                          }}
-                        />
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">{movie.title}</h3>
-                        <span className="text-sm text-gray-500">{movie.release_year}</span>
+                        <div className="relative aspect-[2/3]">
+                          <img
+                            src={movie.poster_url}
+                            alt={movie.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
+                              e.target.onerror = null;
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                            <h3 className="text-white text-lg font-semibold mb-1 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{movie.title}</h3>
+                            <span className="text-white/80 text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{movie.release_year}</span>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
