@@ -360,28 +360,27 @@ class ListViewSet(viewsets.ModelViewSet):
 
         try:
             movie = get_object_or_404(Movie, id=movie_id)
-            movie_in_list, created = MovieInList.objects.get_or_create(
+            # Vérifier si le film est déjà dans la liste
+            if MovieInList.objects.filter(movie=movie, list=list_obj).exists():
+                return Response(
+                    {'error': 'Ce film est déjà dans la liste.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            movie_in_list = MovieInList.objects.create(
                 movie=movie,
                 list=list_obj,
-                defaults={'note': note}
+                note=note
             )
-
-            if not created:
-                movie_in_list.note = note
-                movie_in_list.save()
-
-            logger.info(f"Successfully {'added' if created else 'updated'} movie in list")
-            
+            logger.info(f"Successfully added movie in list")
             serializer = MovieInListSerializer(
                 movie_in_list,
                 context={'request': request}
             )
             return Response({
                 'data': serializer.data,
-                'already_in_list': not created,
-                'message': 'Film déja dans la liste' if not created else 'Film ajouté à la liste'
+                'already_in_list': False,
+                'message': 'Film ajouté à la liste'
             })
-            
         except Movie.DoesNotExist:
             logger.error(f"Movie {movie_id} not found")
             return Response(
