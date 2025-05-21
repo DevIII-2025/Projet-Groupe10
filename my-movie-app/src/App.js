@@ -64,6 +64,16 @@ function ProtectedApp() {
   const [activeFilters, setActiveFilters] = useState({ year: "", sort: "" });
   const [addMovieModalIsOpen, setAddMovieModalIsOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    // Initialiser à partir du localStorage ou du système
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('darkMode');
+      if (stored !== null) return stored === 'true';
+      // Optionnel : détecter le mode sombre système
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
 
   const fetchMovies = (page, search, sort) => {
     setCurrentPage(page);
@@ -134,6 +144,16 @@ function ProtectedApp() {
     setIsLoading(true);
     fetchMovies(1, "", "");
   }, [user]);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('darkMode', 'false');
+    }
+  }, [darkMode]);
 
   const openModal = (movieId) => {
     axiosInstance.get(`/movies/${movieId}/`)
@@ -228,17 +248,24 @@ function ProtectedApp() {
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-md">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      <nav className="bg-white dark:bg-gray-800 shadow-md transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-blue-600 flex items-center">
+              <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-300 flex items-center">
                 <span className="mr-2">🎬</span>
                 CritiQ
               </h1>
             </div>
             <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setDarkMode((prev) => !prev)}
+                className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
+                title={darkMode ? 'Light mode' : 'Dark mode'}
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
               <button
                 onClick={() => setShowLists(!showLists)}
                 className={`px-4 py-2 rounded-lg text-white transition-all duration-200 flex items-center space-x-2 ${
