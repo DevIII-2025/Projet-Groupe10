@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { likeMovie, markMovieAsViewed, getLists, addMovieToList } from '../api/listAPI';
+import { likeMovie, markMovieAsViewed, getLists, addMovieToList, getList } from '../api/listAPI';
 
 const MovieActions = ({ movie, onUpdate }) => {
     const [lists, setLists] = useState([]);
@@ -24,13 +24,18 @@ const MovieActions = ({ movie, onUpdate }) => {
 
     const fetchLists = async () => {
         try {
-            console.log('Fetching lists...');
             const data = await getLists();
-            console.log('Lists received:', data);
             const userLists = data.filter(list => !list.is_system);
-            setLists(userLists);
+
+            // Charger les films pour chaque liste
+            const listsWithMovies = await Promise.all(
+                userLists.map(async (list) => {
+                    const detail = await getList(list.id); // getList va chercher /lists/:id/
+                    return { ...list, movies: detail.movies || [] };
+                })
+            );
+            setLists(listsWithMovies);
         } catch (err) {
-            console.error('Error fetching lists:', err);
             setError('Erreur lors du chargement des listes');
         }
     };
@@ -91,25 +96,31 @@ const MovieActions = ({ movie, onUpdate }) => {
         }
     };
 
+    const isMovieInSelectedList = () => {
+        if (!selectedList) return false;
+        const list = lists.find(l => l.id === parseInt(selectedList));
+        if (!list || !list.movies) return false;
+        return list.movies.some(movieInList => movieInList.movie && movieInList.movie.id === movie.id);
+    };
+
     const handleAddToList = async (e) => {
         e.preventDefault();
         if (!selectedList) return;
-
+        if (isMovieInSelectedList()) {
+            setError('Ce film est déjà dans la liste sélectionnée !');
+            return;
+        }
         setLoading(true);
         setError(null);
         setSuccessMessage(null);
         try {
-            console.log('Adding movie to list:', { listId: selectedList, movieId: movie.id, note });
             const result = await addMovieToList(selectedList, movie.id, note);
-            console.log('Movie added successfully');
             setNote('');
             setSelectedList('');
             setSuccessMessage(result.message);
-            // Rafraîchir la liste des listes
             fetchLists();
         } catch (err) {
-            console.error('Error adding movie to list:', err);
-            setError('Erreur lors de l\'ajout à la liste');
+            setError(err.message || 'Erreur lors de l\'ajout à la liste');
         } finally {
             setLoading(false);
         }
@@ -165,10 +176,10 @@ const MovieActions = ({ movie, onUpdate }) => {
                 />
                 <button
                     type="submit"
-                    disabled={!selectedList || loading}
                     className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
+                    disabled={loading || isMovieInSelectedList()}
                 >
-                    Ajouter à la liste
+                    {isMovieInSelectedList() ? 'Déjà dans la liste' : 'Ajouter à la liste'}
                 </button>
             </form>
 
