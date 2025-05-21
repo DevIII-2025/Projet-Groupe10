@@ -64,6 +64,16 @@ DEBUG=True
 DATABASE_NAME=db.sqlite3
 ALLOWED_HOSTS=localhost,149.202.49.197
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://149.202.49.197:3000
+MAILERSEND_API_KEY=mlsn.0778a8069af89796ffcf4fb747651bb5be1141883444335e30da57ede7da8112
+
+
+# Configuration Email
+EMAIL_HOST=smtp.mailersend.net
+EMAIL_PORT=587
+EMAIL_HOST_USER=MS_cEhI6G@critiq.ovh
+EMAIL_HOST_PASSWORD=mssp.gUGt4Ai.7dnvo4dr7jxg5r86.6CmT8PT
+EMAIL_USE_TLS=True
+DEFAULT_FROM_EMAIL=no-reply@critiq.ovh
 
 
 
@@ -73,6 +83,16 @@ DEBUG=True
 DATABASE_NAME=db_dev.sqlite3
 ALLOWED_HOSTS=localhost,149.202.49.197
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://149.202.49.197:3000
+MAILERSEND_API_KEY=mlsn.0778a8069af89796ffcf4fb747651bb5be1141883444335e30da57ede7da8112
+
+
+# Configuration Email
+EMAIL_HOST=smtp.mailersend.net
+EMAIL_PORT=587
+EMAIL_HOST_USER=MS_cEhI6G@critiq.ovh
+EMAIL_HOST_PASSWORD=mssp.gUGt4Ai.7dnvo4dr7jxg5r86.6CmT8PT
+EMAIL_USE_TLS=True
+DEFAULT_FROM_EMAIL=no-reply@critiq.ovh
 
 
 Fichier .env (front):

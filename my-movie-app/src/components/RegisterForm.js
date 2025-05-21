@@ -136,7 +136,7 @@ const RegisterForm = () => {
                         }`}
                         disabled={loading}
                     >
-                        {loading ? 'Envoi du code...' : 'Envoyer le code'}
+                        {loading ? 'Envoi du code...' : "S'inscrire"}
                     </button>
                 </form>
                 <div className="mt-4 text-center">
