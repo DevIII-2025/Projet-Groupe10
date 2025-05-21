@@ -302,7 +302,12 @@ function ProtectedApp() {
         <div className="flex gap-4 mb-6">
           <button
             className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
-            onClick={() => setShowLists(!showLists)}
+            onClick={() => {
+              setShowLists(!showLists);
+              if (!showLists) {
+                setSelectedList(null);
+              }
+            }}
           >
             {showLists ? "Voir Films" : "Voir Mes Listes"}
           </button>
