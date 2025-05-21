@@ -1,0 +1,1995 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import MovieDetails from "./components/MovieDetails";
+import Modal from 'react-modal';
+import Home from './components/Home';
+import LoginForm from "./components/LoginForm";
+import Register from "./components/Register";
+import LogoutButton from "./components/LogoutButton";
+import Lists from "./components/Lists";
+import ListContent from "./components/ListContent";
+import MovieActions from "./components/MovieActions";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+
+Modal.setAppElement('#root');
+
+function ProtectedApp() {
+  const { user, loading } = useAuth();
+  const [movies, setMovies] = useState([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [releaseYear, setReleaseYear] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [posterUrl, setPosterUrl] = useState("");
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [selectedList, setSelectedList] = useState(null);
+  const [showLists, setShowLists] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    fetch("http://127.0.0.1:8000/api/movies/", {
+      credentials: "include"
+    })
+      .then(response => response.json())
+      .then(data => {
+        const uniqueMovies = data.filter((movie, index, self) =>
+          index === self.findIndex((m) => m.id === movie.id)
+        );
+        setMovies(uniqueMovies);
+      })
+      .catch(error => console.error("Erreur :", error));
+  }, [user]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (movies.some(movie => movie.title === title && movie.release_year === releaseYear)) {
+      alert("❌ Ce film existe déjà !");
+      return;
+    }
+    fetch("http://127.0.0.1:8000/api/movies/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        title,
+        description,
+        release_year: releaseYear,
+        genre: "Science-fiction",
+        poster_url: posterUrl
+      }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        setMovies((prevMovies) => [...prevMovies, data]);
+        setTitle("");
+        setDescription("");
+        setReleaseYear("");
+      })
+      .catch(error => console.error("Erreur API:", error.message));
+  };
+
+  const sortMovies = () => {
+    const sortedMovies = [...movies].sort((a, b) => a.release_year - b.release_year);
+    setMovies(sortedMovies);
+  };
+
+  const openModal = (movieId) => {
+    fetch(`http://127.0.0.1:8000/api/movies/${movieId}/`, { credentials: "include" })
+      .then(response => response.json())
+      .then(data => {
+        setSelectedMovie(data);
+        setModalIsOpen(true);
+      })
+      .catch(err => console.error(err));
+  };
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+    setSelectedMovie(null);
+  };
+
+  const handleMovieUpdate = (updatedMovie) => {
+    setMovies(movies.map(movie => 
+      movie.id === updatedMovie.id ? updatedMovie : movie
+    ));
+    if (selectedMovie?.id === updatedMovie.id) {
+      setSelectedMovie(updatedMovie);
+    }
+  };
+
+  if (loading) return <p>Chargement...</p>;
+  if (!user) return <Navigate to="/login" replace />;
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-gray-800 p-4">
+      <div className="w-full max-w-6xl">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-4xl font-bold text-blue-600">Films disponibles</h1>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-gray-600">
+              Connecté en tant que <strong>{user.username}</strong>
+            </p>
+            <LogoutButton />
+          </div>
+        </div>
+
+        <div className="flex gap-4 mb-6">
+          <button
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
+            onClick={() => setShowLists(!showLists)}
+          >
+            {showLists ? "Voir Films" : "Voir Mes Listes"}
+          </button>
+        </div>
+
+        {showLists ? (
+          selectedList ? (
+            <ListContent
+              list={selectedList}
+              onBack={() => setSelectedList(null)}
+            />
+          ) : (
+            <Lists onSelectList={setSelectedList} />
+          )
+        ) : (
+          <>
+            <button
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700 mb-4"
+              onClick={sortMovies}
+            >
+              Trier par année
+            </button>
+
+            <input
+              type="text"
+              placeholder="Rechercher un film..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full p-2 border rounded mb-4"
+            />
+
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/movies/:id" element={<MovieDetails />} />
+            </Routes>
+
+            <ul className="w-3/4 bg-white shadow-md rounded-lg p-4">
+              {movies
+                .filter(movie => movie.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                .map((movie, index) => (
+                  <li
+                    key={`${movie.id}-${index}`}
+                    className="border-b last:border-none py-4 flex items-center cursor-pointer"
+                    onClick={() => openModal(movie.id)}
+                  >
+                    <img src={movie.poster_url} alt={movie.title} className="w-20 h-30 object-cover mr-4" />
+                    <div>
+                      <strong className="text-lg">{movie.title}</strong> - {movie.release_year} ({movie.genre})
+                      <p className="text-gray-600">{movie.description}</p>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+
+            <h2 className="text-2xl font-semibold mt-8">Ajouter un film</h2>
+            <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 mt-4 w-3/4">
+              <div className="grid grid-cols-3 gap-4">
+                <input type="text" placeholder="Titre" value={title} onChange={(e) => setTitle(e.target.value)} required className="border p-2 w-full rounded" />
+                <input type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} required className="border p-2 w-full rounded" />
+                <input type="number" placeholder="Année de sortie" value={releaseYear} onChange={(e) => setReleaseYear(e.target.value)} required className="border p-2 w-full rounded" />
+                <input type="text" placeholder="URL de l'affiche" value={posterUrl} onChange={(e) => setPosterUrl(e.target.value)} required className="border p-2 w-full rounded" />
+              </div>
+              <button type="submit" className="px-6 py-2 bg-blue-500 text-white rounded w-full mt-4">Ajouter</button>
+            </form>
+          </>
+        )}
+
+        <Modal
+          isOpen={modalIsOpen}
+          onRequestClose={closeModal}
+          className="bg-white p-6 rounded-lg shadow-lg mx-auto mt-20 outline-none max-w-2xl"
+          overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start"
+        >
+          {selectedMovie ? (
+            <>
+              <div className="flex gap-6">
+                <img src={selectedMovie.poster_url} alt={selectedMovie.title} className="w-48 h-72 object-cover rounded" />
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold mb-4">{selectedMovie.title}</h2>
+                  <p className="mb-2">{selectedMovie.description}</p>
+                  <p className="mb-2"><strong>Genre :</strong> {selectedMovie.genre}</p>
+                  <p className="mb-4"><strong>Année :</strong> {selectedMovie.release_year}</p>
+                  <MovieActions movie={selectedMovie} onUpdate={handleMovieUpdate} />
+                </div>
+              </div>
+              <button onClick={closeModal} className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Fermer</button>
+            </>
+          ) : (
+            <p>Chargement...</p>
+          )}
+        </Modal>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="*" element={<ProtectedApp />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
+  );
+}
+
+export default App;
+import { render, screen } from '@testing-library/react';
+import App from './App';
+
+test('renders learn react link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/learn react/i);
+  expect(linkElement).toBeInTheDocument();
+});
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.test {
+  color: theme('colors.red.500');
+}
+
+.movies-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.movie-card {
+  width: 200px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  padding: 10px;
+  border-radius: 10px;
+  transition: transform 0.3s;
+}
+
+.movie-card:hover {
+  transform: scale(1.05);
+}
+
+.movie-card img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.ReactModal__Overlay {
+  background-color: rgba(0,0,0,0.5) !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ReactModal__Content {
+  width: 60%;
+  padding: 20px;
+  border-radius: 10px !important;
+}
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 841.9 595.3"><g fill="#61DAFB"><path d="M666.3 296.5c0-32.5-40.7-63.3-103.1-82.4 14.4-63.6 8-114.2-20.2-130.4-6.5-3.8-14.1-5.6-22.4-5.6v22.3c4.6 0 8.3.9 11.4 2.6 13.6 7.8 19.5 37.5 14.9 75.7-1.1 9.4-2.9 19.3-5.1 29.4-19.6-4.8-41-8.5-63.5-10.9-13.5-18.5-27.5-35.3-41.6-50 32.6-30.3 63.2-46.9 84-46.9V78c-27.5 0-63.5 19.6-99.9 53.6-36.4-33.8-72.4-53.2-99.9-53.2v22.3c20.7 0 51.4 16.5 84 46.6-14 14.7-28 31.4-41.3 49.9-22.6 2.4-44 6.1-63.6 11-2.3-10-4-19.7-5.2-29-4.7-38.2 1.1-67.9 14.6-75.8 3-1.8 6.9-2.6 11.5-2.6V78.5c-8.4 0-16 1.8-22.6 5.6-28.1 16.2-34.4 66.7-19.9 130.1-62.2 19.2-102.7 49.9-102.7 82.3 0 32.5 40.7 63.3 103.1 82.4-14.4 63.6-8 114.2 20.2 130.4 6.5 3.8 14.1 5.6 22.5 5.6 27.5 0 63.5-19.6 99.9-53.6 36.4 33.8 72.4 53.2 99.9 53.2 8.4 0 16-1.8 22.6-5.6 28.1-16.2 34.4-66.7 19.9-130.1 62-19.1 102.5-49.9 102.5-82.3zm-130.2-66.7c-3.7 12.9-8.3 26.2-13.5 39.5-4.1-8-8.4-16-13.1-24-4.6-8-9.5-15.8-14.4-23.4 14.2 2.1 27.9 4.7 41 7.9zm-45.8 106.5c-7.8 13.5-15.8 26.3-24.1 38.2-14.9 1.3-30 2-45.2 2-15.1 0-30.2-.7-45-1.9-8.3-11.9-16.4-24.6-24.2-38-7.6-13.1-14.5-26.4-20.8-39.8 6.2-13.4 13.2-26.8 20.7-39.9 7.8-13.5 15.8-26.3 24.1-38.2 14.9-1.3 30-2 45.2-2 15.1 0 30.2.7 45 1.9 8.3 11.9 16.4 24.6 24.2 38 7.6 13.1 14.5 26.4 20.8 39.8-6.3 13.4-13.2 26.8-20.7 39.9zm32.3-13c5.4 13.4 10 26.8 13.8 39.8-13.1 3.2-26.9 5.9-41.2 8 4.9-7.7 9.8-15.6 14.4-23.7 4.6-8 8.9-16.1 13-24.1zM421.2 430c-9.3-9.6-18.6-20.3-27.8-32 9 .4 18.2.7 27.5.7 9.4 0 18.7-.2 27.8-.7-9 11.7-18.3 22.4-27.5 32zm-74.4-58.9c-14.2-2.1-27.9-4.7-41-7.9 3.7-12.9 8.3-26.2 13.5-39.5 4.1 8 8.4 16 13.1 24 4.7 8 9.5 15.8 14.4 23.4zM420.7 163c9.3 9.6 18.6 20.3 27.8 32-9-.4-18.2-.7-27.5-.7-9.4 0-18.7.2-27.8.7 9-11.7 18.3-22.4 27.5-32zm-74 58.9c-4.9 7.7-9.8 15.6-14.4 23.7-4.6 8-8.9 16-13 24-5.4-13.4-10-26.8-13.8-39.8 13.1-3.1 26.9-5.8 41.2-7.9zm-90.5 125.2c-35.4-15.1-58.3-34.9-58.3-50.6 0-15.7 22.9-35.6 58.3-50.6 8.6-3.7 18-7 27.7-10.1 5.7 19.6 13.2 40 22.5 60.9-9.2 20.8-16.6 41.1-22.2 60.6-9.9-3.1-19.3-6.5-28-10.2zM310 490c-13.6-7.8-19.5-37.5-14.9-75.7 1.1-9.4 2.9-19.3 5.1-29.4 19.6 4.8 41 8.5 63.5 10.9 13.5 18.5 27.5 35.3 41.6 50-32.6 30.3-63.2 46.9-84 46.9-4.5-.1-8.3-1-11.3-2.7zm237.2-76.2c4.7 38.2-1.1 67.9-14.6 75.8-3 1.8-6.9 2.6-11.5 2.6-20.7 0-51.4-16.5-84-46.6 14-14.7 28-31.4 41.3-49.9 22.6-2.4 44-6.1 63.6-11 2.3 10.1 4.1 19.8 5.2 29.1zm38.5-66.7c-8.6 3.7-18 7-27.7 10.1-5.7-19.6-13.2-40-22.5-60.9 9.2-20.8 16.6-41.1 22.2-60.6 9.9 3.1 19.3 6.5 28.1 10.2 35.4 15.1 58.3 34.9 58.3 50.6-.1 15.7-23 35.6-58.4 50.6zM320.8 78.4z"/><circle cx="420.9" cy="296.5" r="45.7"/><path d="M520.5 78.1z"/></g></svg>
+const reportWebVitals = onPerfEntry => {
+  if (onPerfEntry && onPerfEntry instanceof Function) {
+    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+      getCLS(onPerfEntry);
+      getFID(onPerfEntry);
+      getFCP(onPerfEntry);
+      getLCP(onPerfEntry);
+      getTTFB(onPerfEntry);
+    });
+  }
+};
+
+export default reportWebVitals;
+// jest-dom adds custom jest matchers for asserting on DOM nodes.
+// allows you to do things like:
+// expect(element).toHaveTextContent(/react/i)
+// learn more: https://github.com/testing-library/jest-dom
+import '@testing-library/jest-dom';
+// src/api/authAPI.js
+import axios from "axios";
+import axiosInstance, { API_URL } from './axiosConfig';
+
+const AUTH_URL = 'http://127.0.0.1:8000/api/users';
+
+// Fonction pour rafraîchir le token
+const refreshToken = async () => {
+  try {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await axios.post('http://localhost:8000/api/users/token/refresh/', {
+      refresh: refreshToken
+    });
+
+    const { access } = response.data;
+    localStorage.setItem('jwt_token', access);
+    return access;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    // Si le refresh échoue, on déconnecte l'utilisateur
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('refresh_token');
+    window.location.href = '/login';
+    throw error;
+  }
+};
+
+export const login = async (username, password) => {
+  try {
+    const response = await axiosInstance.post('/users/login/', { 
+      username, 
+      password 
+    });
+    
+    // Stocker les tokens
+    const { access_token, refresh_token } = response.data;
+    if (access_token) {
+      localStorage.setItem('jwt_token', access_token);
+    }
+    if (refresh_token) {
+      localStorage.setItem('refresh_token', refresh_token);
+    }
+    return response;
+  } catch (error) {
+    console.error('Error during login:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const getMe = async () => {
+  try {
+    const response = await axiosInstance.get('/users/me/');
+    return response;
+  } catch (error) {
+    console.error('Error fetching user profile:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const logout = async () => {
+  try {
+    const response = await axiosInstance.post('/users/logout/');
+    // Supprimer les tokens
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('refresh_token');
+    return response;
+  } catch (error) {
+    console.error('Error during logout:', error.response?.data || error.message);
+    // Même en cas d'erreur, on supprime les tokens
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('refresh_token');
+    throw error;
+  }
+};
+
+export const isAuthenticated = () => {
+  const token = localStorage.getItem('jwt_token');
+  const refreshToken = localStorage.getItem('refresh_token');
+  return !!token && !!refreshToken;
+};
+import axios from 'axios';
+
+const BASE_URL = 'http://127.0.0.1:8000';
+const API_URL = `${BASE_URL}/api`;
+
+const axiosInstance = axios.create({
+    baseURL: API_URL,
+    withCredentials: true,
+});
+
+// Intercepteur pour ajouter le token à chaque requête
+axiosInstance.interceptors.request.use((config) => {
+    const token = localStorage.getItem('jwt_token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
+// Fonction pour rafraîchir le token
+const refreshToken = async () => {
+    try {
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (!refreshToken) {
+            throw new Error('No refresh token available');
+        }
+
+        const response = await axios.post(`${API_URL}/users/token/refresh/`, {
+            refresh: refreshToken
+        }, {
+            withCredentials: true
+        });
+
+        const { access } = response.data;
+        localStorage.setItem('jwt_token', access);
+        return access;
+    } catch (error) {
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
+        throw error;
+    }
+};
+
+// Intercepteur pour gérer les erreurs 401 et rafraîchir le token
+axiosInstance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+
+        // Si l'erreur est 401 et qu'on n'a pas encore essayé de rafraîchir le token
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+                const newToken = await refreshToken();
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                return axiosInstance(originalRequest);
+            } catch (refreshError) {
+                return Promise.reject(refreshError);
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);
+
+export { API_URL, BASE_URL };
+export default axiosInstance; 
+import axiosInstance from './axiosConfig';
+
+// Créer une nouvelle liste
+export const createList = async (name, description = '') => {
+    try {
+        const response = await axiosInstance.post('/lists/', {
+            name,
+            description
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating list:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors de la création de la liste');
+    }
+};
+
+// Récupérer toutes les listes de l'utilisateur
+export const getLists = async () => {
+    try {
+        console.log('Fetching lists...');
+        const response = await axiosInstance.get('/lists/');
+        console.log('Lists received:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching lists:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors du chargement des listes');
+    }
+};
+
+// Récupérer une liste spécifique avec ses films
+export const getList = async (listId) => {
+    try {
+        const response = await axiosInstance.get(`/lists/${listId}/`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching list:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors du chargement de la liste');
+    }
+};
+
+// Mettre à jour une liste
+export const updateList = async (listId, name, description = '') => {
+    try {
+        const response = await axiosInstance.put(`/lists/${listId}/`, {
+            name,
+            description
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating list:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors de la mise à jour de la liste');
+    }
+};
+
+// Supprimer une liste
+export const deleteList = async (listId) => {
+    try {
+        await axiosInstance.delete(`/lists/${listId}/`);
+        return true;
+    } catch (error) {
+        console.error('Error deleting list:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors de la suppression de la liste');
+    }
+};
+
+// Ajouter un film à une liste
+export const addMovieToList = async (listId, movieId, note = '') => {
+    try {
+        console.log('Adding movie to list:', { listId, movieId, note });
+        const response = await axiosInstance.post(`/lists/${listId}/add_movie/`, {
+            movie_id: movieId,
+            note
+        });
+        console.log('Movie added successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error adding movie to list:', error.response?.data || error.message);
+        const errorMessage = error.response?.data?.detail || 
+                           error.response?.data?.error || 
+                           'Erreur lors de l\'ajout du film à la liste';
+        throw new Error(errorMessage);
+    }
+};
+
+// Retirer un film d'une liste
+export const removeMovieFromList = async (listId, movieId) => {
+    try {
+        await axiosInstance.post(`/lists/${listId}/remove_movie/`, {
+            movie_id: movieId
+        });
+        return true;
+    } catch (error) {
+        console.error('Error removing movie from list:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors du retrait du film de la liste');
+    }
+};
+
+// Liker un film
+export const likeMovie = async (movieId) => {
+    try {
+        const response = await axiosInstance.post(`/movies/${movieId}/like/`);
+        return response.data;
+    } catch (error) {
+        console.error('Error liking movie:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors du like du film');
+    }
+};
+
+// Marquer un film comme vu
+export const markMovieAsViewed = async (movieId) => {
+    try {
+        const response = await axiosInstance.post(`/movies/${movieId}/view/`);
+        return response.data;
+    } catch (error) {
+        console.error('Error marking movie as viewed:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors du marquage du film comme vu');
+    }
+}; 
+// export const refreshToken = () => {
+//     fetch('http://127.0.0.1:8000/api/token/refresh/', {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ refresh: localStorage.getItem('refresh') })
+//     })
+//     .then(res => res.json())
+//     .then(data => localStorage.setItem('token', data.access))
+//     .catch(() => {
+//       localStorage.clear();
+//       window.location = '/login';
+//     });
+//   }
+  
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
+const EmailVerification = ({ email, onVerificationSuccess }) => {
+    const [code, setCode] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+
+    const handleVerification = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+
+        try {
+            await axios.post('/api/users/verify-email/', {
+                email,
+                code
+            });
+
+            onVerificationSuccess();
+            navigate('/login');
+        } catch (err) {
+            setError(err.response?.data?.error || 'Une erreur est survenue');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendCode = async () => {
+        setLoading(true);
+        setError('');
+
+        try {
+            await axios.post('/api/users/resend-verification/', { email });
+            setError('Un nouveau code a été envoyé à votre email');
+        } catch (err) {
+            setError(err.response?.data?.error || 'Une erreur est survenue');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold mb-6 text-center">Vérification Email</h2>
+            <p className="mb-4 text-gray-600 text-center">
+                Un code de vérification a été envoyé à {email}
+            </p>
+
+            <form onSubmit={handleVerification} className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                        Code de vérification
+                    </label>
+                    <input
+                        type="text"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        maxLength="6"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Entrez le code à 6 chiffres"
+                        required
+                    />
+                </div>
+
+                {error && (
+                    <div className="text-red-500 text-sm bg-red-50 p-2 rounded">
+                        {error}
+                    </div>
+                )}
+
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                >
+                    Vérifier
+                </button>
+
+                <button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={loading}
+                    className="w-full mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+                >
+                    Renvoyer le code
+                </button>
+            </form>
+        </div>
+    );
+};
+
+export default EmailVerification; 
+import { useAuth } from "../context/AuthContext";
+import { logout } from "../api/authAPI";
+
+export default function Home() {
+  const { user, setUser } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    setUser(null);
+  };
+
+  return (
+    <div>
+      <h1>Welcome, {user?.username}!</h1>
+      <button onClick={handleLogout}>Logout</button>
+    </div>
+  );
+}
+import React, { useState, useEffect } from 'react';
+import { getList, removeMovieFromList } from '../api/listAPI';
+
+const ListContent = ({ list, onBack }) => {
+    const [listContent, setListContent] = useState(null);
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (list?.id) {
+            fetchListContent();
+        }
+    }, [list?.id]);
+
+    const fetchListContent = async () => {
+        try {
+            console.log('Fetching list content for list:', list.id);
+            const data = await getList(list.id);
+            console.log('Received list content:', data);
+            
+            if (!data || !Array.isArray(data.movies)) {
+                throw new Error('Format de données invalide');
+            }
+            
+            setListContent(data);
+            setError(null);
+        } catch (err) {
+            console.error('Error in fetchListContent:', err);
+            setError(err.message || 'Erreur lors du chargement de la liste');
+            setListContent(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRemoveMovie = async (movieId) => {
+        if (!window.confirm('Êtes-vous sûr de vouloir retirer ce film de la liste ?')) return;
+
+        try {
+            console.log('Removing movie:', movieId, 'from list:', list.id);
+            await removeMovieFromList(list.id, movieId);
+            
+            setListContent(prev => ({
+                ...prev,
+                movies: prev.movies.filter(m => m.movie.id !== movieId)
+            }));
+            
+            console.log('Movie removed successfully');
+        } catch (err) {
+            console.error('Error removing movie:', err);
+            setError(err.message || 'Erreur lors de la suppression du film');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center p-8">
+                <div className="text-gray-600">Chargement de la liste...</div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="text-red-600 font-semibold">Erreur</div>
+                <div className="text-red-500">{error}</div>
+                <button
+                    onClick={fetchListContent}
+                    className="mt-4 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                >
+                    Réessayer
+                </button>
+            </div>
+        );
+    }
+
+    if (!listContent) {
+        return (
+            <div className="text-center text-gray-600 p-8">
+                Liste non trouvée
+                <button
+                    onClick={onBack}
+                    className="block mx-auto mt-4 px-4 py-2 text-blue-600 hover:text-blue-800"
+                >
+                    ← Retour aux listes
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="w-full max-w-4xl mx-auto p-4">
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h2 className="text-2xl font-bold">{listContent.name}</h2>
+                    {listContent.description && (
+                        <p className="text-gray-600 mt-1">{listContent.description}</p>
+                    )}
+                </div>
+                <button
+                    onClick={onBack}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                    ← Retour aux listes
+                </button>
+            </div>
+
+            <div className="space-y-4">
+                {listContent.movies && listContent.movies.length > 0 ? (
+                    listContent.movies.map(({ movie, note }) => (
+                        <div
+                            key={movie.id}
+                            className="flex items-start gap-4 p-4 bg-white rounded shadow hover:shadow-md transition-shadow"
+                        >
+                            <img
+                                src={movie.poster_url}
+                                alt={movie.title}
+                                className="w-24 h-36 object-cover rounded"
+                                onError={(e) => {
+                                    e.target.src = '/placeholder-movie.jpg';
+                                    e.target.onerror = null;
+                                }}
+                            />
+                            <div className="flex-1">
+                                <h3 className="text-xl font-semibold">{movie.title}</h3>
+                                <p className="text-gray-600">
+                                    {movie.release_year} • {movie.genre}
+                                </p>
+                                <p className="mt-2 text-gray-700">{movie.description}</p>
+                                {note && (
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        Note : {note}
+                                    </p>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => handleRemoveMovie(movie.id)}
+                                className="px-3 py-1 text-red-500 hover:text-red-700"
+                            >
+                                Retirer
+                            </button>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center text-gray-500 py-8">
+                        Cette liste est vide
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default ListContent; 
+import React, { useState, useEffect } from 'react';
+import { getLists, createList, deleteList } from '../api/listAPI';
+
+const Lists = ({ onSelectList }) => {
+    const [lists, setLists] = useState([]);
+    const [newListName, setNewListName] = useState('');
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchLists();
+    }, []);
+
+    const fetchLists = async () => {
+        try {
+            console.log('Fetching lists...');
+            const data = await getLists();
+            console.log('Lists data received:', data);
+            setLists(data);
+        } catch (err) {
+            console.error('Error fetching lists:', err);
+            setError(err.message || 'Erreur lors du chargement des listes');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCreateList = async (e) => {
+        e.preventDefault();
+        if (!newListName.trim()) return;
+
+        try {
+            console.log('Creating new list:', newListName);
+            const newList = await createList(newListName);
+            console.log('New list created:', newList);
+            setLists([...lists, newList]);
+            setNewListName('');
+        } catch (err) {
+            console.error('Error creating list:', err);
+            setError(err.message || 'Erreur lors de la création de la liste');
+        }
+    };
+
+    const handleDeleteList = async (listId) => {
+        if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette liste ?')) return;
+
+        try {
+            console.log('Deleting list:', listId);
+            await deleteList(listId);
+            console.log('List deleted successfully');
+            setLists(lists.filter(list => list.id !== listId));
+        } catch (err) {
+            console.error('Error deleting list:', err);
+            setError(err.message || 'Erreur lors de la suppression de la liste');
+        }
+    };
+
+    if (loading) return <div className="text-center py-4">Chargement des listes...</div>;
+    if (error) return (
+        <div className="text-red-500 p-4 bg-red-50 rounded-lg">
+            <p className="font-semibold">Erreur :</p>
+            <p>{error}</p>
+        </div>
+    );
+
+    return (
+        <div className="w-full max-w-md mx-auto p-4">
+            <h2 className="text-2xl font-bold mb-4">Mes Listes</h2>
+            
+            <form onSubmit={handleCreateList} className="mb-6">
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        value={newListName}
+                        onChange={(e) => setNewListName(e.target.value)}
+                        placeholder="Nouvelle liste..."
+                        className="flex-1 p-2 border rounded"
+                    />
+                    <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                        Créer
+                    </button>
+                </div>
+            </form>
+
+            <div className="space-y-2">
+                {lists.length === 0 ? (
+                    <div className="text-center text-gray-500 py-4">
+                        Vous n'avez pas encore de listes. Créez-en une !
+                    </div>
+                ) : (
+                    lists.map(list => (
+                        <div
+                            key={list.id}
+                            className="flex items-center justify-between p-3 bg-white rounded shadow hover:shadow-md transition-shadow"
+                        >
+                            <div
+                                className="flex-1 cursor-pointer"
+                                onClick={() => onSelectList(list)}
+                            >
+                                <h3 className="font-semibold">{list.name}</h3>
+                                <p className="text-sm text-gray-500">
+                                    {list.movies_count} films
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => handleDeleteList(list.id)}
+                                className="px-3 py-1 text-red-500 hover:text-red-700"
+                            >
+                                Supprimer
+                            </button>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default Lists; 
+// import React, { useState } from 'react';
+
+// export default function Login({ setToken }) {
+//     const [username, setUsername] = useState('');
+//     const [password, setPassword] = useState('');
+
+//     const handleSubmit = (e) => {
+//         e.preventDefault();
+//         fetch('http://127.0.0.1:8000/api/token/', {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ username, password }),
+//         })
+//             .then(res => {
+//                 if (!res.ok) throw new Error("Échec de connexion");
+//                 return res.json();
+//             })
+//             .then(data => {
+//                 localStorage.setItem('token', data.access);
+//                 localStorage.setItem('refresh', data.refresh);
+//                 window.location.reload();
+//             })
+//             .catch(err => alert(err));
+//     };
+
+//     return (
+//         <form onSubmit={handleSubmit} className="flex flex-col w-80 mx-auto">
+//             <input placeholder="Nom d'utilisateur" onChange={e => setUsername(e.target.value)} className="border p-2 rounded mb-2" />
+//             <input type="password" placeholder="Mot de passe" onChange={e => setPassword(e.target.value)} className="border p-2 rounded mb-2" />
+//             <button className="bg-blue-500 text-white rounded p-2">Se connecter</button>
+//         </form>
+//     );
+// }
+import { useState } from "react";
+import { login, getMe } from "../api/authAPI";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
+export default function LoginForm() {
+  const { setUser } = useAuth();
+  const navigate = useNavigate();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      console.log("Tentative de connexion avec:", username);
+      const loginResponse = await login(username, password);
+      console.log("Réponse de login:", loginResponse.data);
+
+      const userResponse = await getMe();
+      console.log("Réponse de getMe:", userResponse.data);
+
+      setUser(userResponse.data);
+      navigate("/");
+    } catch (err) {
+      console.error("Erreur complète:", err);
+      if (err.response) {
+        // Le serveur a répondu avec un statut d'erreur
+        setError(err.response.data.detail || "Échec de la connexion. Vérifiez vos identifiants.");
+      } else if (err.request) {
+        // La requête a été faite mais aucune réponse n'a été reçue
+        setError("Impossible de contacter le serveur. Vérifiez votre connexion.");
+      } else {
+        // Une erreur s'est produite lors de la configuration de la requête
+        setError("Une erreur est survenue lors de la tentative de connexion.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
+      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+        <h2 className="text-3xl font-bold text-center text-blue-600 mb-6">
+          Connexion
+        </h2>
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">
+              Nom d'utilisateur ou Email
+            </label>
+            <input
+              type="text"
+              placeholder="Username ou Email"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              disabled={loading}
+            />
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">Mot de passe</label>
+            <input
+              type="password"
+              placeholder="Mot de passe"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              disabled={loading}
+            />
+          </div>
+          <button
+            type="submit"
+            className={`w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg ${
+              loading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={loading}
+          >
+            {loading ? 'Connexion en cours...' : 'Se connecter'}
+          </button>
+        </form>
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-600">
+            Pas encore de compte ?{' '}
+            <a href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+              S'inscrire
+            </a>
+          </p>
+        </div>
+      </div>
+      <p className="mt-6 text-gray-500 text-sm">Accès réservé aux utilisateurs enregistrés 🔒</p>
+    </div>
+  );
+}
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { logout } from '../api/authAPI';
+import { useAuth } from '../context/AuthContext';
+
+const LogoutButton = () => {
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setUser(null); // Réinitialiser l'état utilisateur dans le contexte
+      navigate('/login');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+      // En cas d'erreur, on force quand même la déconnexion côté client
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('refresh_token');
+      setUser(null);
+      navigate('/login');
+    }
+  };
+
+  return (
+    <button
+      onClick={handleLogout}
+      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors duration-200"
+    >
+      Se déconnecter
+    </button>
+  );
+};
+
+export default LogoutButton; 
+import React, { useState, useEffect } from 'react';
+import { likeMovie, markMovieAsViewed, getLists, addMovieToList } from '../api/listAPI';
+
+const MovieActions = ({ movie, onUpdate }) => {
+    const [lists, setLists] = useState([]);
+    const [selectedList, setSelectedList] = useState('');
+    const [note, setNote] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [movieStatus, setMovieStatus] = useState({
+        is_liked: false,
+        is_viewed: false
+    });
+
+    useEffect(() => {
+        fetchLists();
+    }, []);
+
+    const fetchLists = async () => {
+        try {
+            console.log('Fetching lists...');
+            const data = await getLists();
+            console.log('Lists received:', data);
+            const userLists = data.filter(list => !list.is_system);
+            setLists(userLists);
+        } catch (err) {
+            console.error('Error fetching lists:', err);
+            setError('Erreur lors du chargement des listes');
+        }
+    };
+
+    const handleLike = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            console.log('Liking movie:', movie.id);
+            const result = await likeMovie(movie.id);
+            console.log('Like result:', result);
+            
+            // Mettre à jour l'état local
+            const newStatus = {
+                ...movieStatus,
+                is_liked: result.status === 'liked'
+            };
+            setMovieStatus(newStatus);
+            
+            // Mettre à jour l'état global
+            onUpdate({
+                ...movie,
+                is_liked: result.status === 'liked'
+            });
+        } catch (err) {
+            console.error('Error liking movie:', err);
+            setError('Erreur lors du like');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleMarkAsViewed = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            console.log('Marking movie as viewed:', movie.id);
+            const result = await markMovieAsViewed(movie.id);
+            console.log('View result:', result);
+            
+            // Mettre à jour l'état local
+            const newStatus = {
+                ...movieStatus,
+                is_viewed: true
+            };
+            setMovieStatus(newStatus);
+            
+            // Mettre à jour l'état global
+            onUpdate({
+                ...movie,
+                is_viewed: true
+            });
+        } catch (err) {
+            console.error('Error marking movie as viewed:', err);
+            setError('Erreur lors du marquage comme vu');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAddToList = async (e) => {
+        e.preventDefault();
+        if (!selectedList) return;
+
+        setLoading(true);
+        setError(null);
+        try {
+            console.log('Adding movie to list:', { listId: selectedList, movieId: movie.id, note });
+            await addMovieToList(selectedList, movie.id, note);
+            console.log('Movie added successfully');
+            setNote('');
+            setSelectedList('');
+            // Rafraîchir la liste des listes
+            fetchLists();
+        } catch (err) {
+            console.error('Error adding movie to list:', err);
+            setError('Erreur lors de l\'ajout à la liste');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="flex gap-4">
+                <button
+                    onClick={handleLike}
+                    disabled={loading}
+                    className={`px-4 py-2 rounded transition-colors duration-200 ${
+                        movieStatus.is_liked
+                            ? 'bg-red-500 text-white hover:bg-red-600'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                >
+                    {movieStatus.is_liked ? '❤️ Liké' : '🤍 Like'}
+                </button>
+                <button
+                    onClick={handleMarkAsViewed}
+                    disabled={loading || movieStatus.is_viewed}
+                    className={`px-4 py-2 rounded transition-colors duration-200 ${
+                        movieStatus.is_viewed
+                            ? 'bg-green-500 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                >
+                    {movieStatus.is_viewed ? '✓ Vu' : '👁️ Marquer comme vu'}
+                </button>
+            </div>
+
+            <form onSubmit={handleAddToList} className="space-y-3">
+                <select
+                    value={selectedList}
+                    onChange={(e) => setSelectedList(e.target.value)}
+                    className="w-full p-2 border rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    disabled={loading}
+                >
+                    <option value="">Sélectionner une liste...</option>
+                    {lists.map(list => (
+                        <option key={list.id} value={list.id}>
+                            {list.name}
+                        </option>
+                    ))}
+                </select>
+                <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Note (optionnelle)"
+                    className="w-full p-2 border rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    disabled={loading}
+                />
+                <button
+                    type="submit"
+                    disabled={!selectedList || loading}
+                    className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
+                >
+                    Ajouter à la liste
+                </button>
+            </form>
+
+            {error && (
+                <div className="text-red-500 text-sm bg-red-50 p-2 rounded">
+                    {error}
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default MovieActions; 
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+
+export default function MovieDetails() {
+  const { id } = useParams();
+  const [movie, setMovie] = useState(null);
+
+  useEffect(() => {
+    fetch(`http://127.0.0.1:8000/api/movies/${id}/`)
+      .then(res => res.json())
+      .then(data => setMovie(data))
+      .catch(err => console.error(err));
+  }, [id]);
+
+  if (!movie) return <p>Chargement...</p>;
+
+  return (
+    <div>
+      <h1>{movie.title}</h1>
+      <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title}/>
+      <p>{movie.overview}</p>
+      <p>Date de sortie : {movie.release_date}</p>
+      <p>Note moyenne : {movie.vote_average}</p>
+      <p>Nombre de votes : {movie.vote_count}</p>
+    </div>
+  );
+}
+import React, { useEffect, useState } from 'react';
+import Modal from 'react-modal';
+import MovieActions from './MovieActions';
+
+// Configuration du modal
+Modal.setAppElement('#root');
+
+const customModalStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    maxWidth: '800px',
+    width: '90%',
+    maxHeight: '90vh',
+    overflow: 'auto',
+    padding: '2rem',
+    borderRadius: '8px',
+  },
+  overlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.75)'
+  }
+};
+
+export default function MovieList() {
+  const [movies, setMovies] = useState([]);
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+
+  useEffect(() => {
+    fetchMovies();
+  }, []);
+
+  const fetchMovies = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/movies/");
+      if (!res.ok) {
+        throw new Error("Erreur lors du chargement des films");
+      }
+      const data = await res.json();
+      setMovies(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const openModal = (movie) => {
+    console.log("Film sélectionné :", movie);
+    setSelectedMovie(movie);
+    setModalIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+    setSelectedMovie(null);
+  };
+
+  const handleMovieUpdate = (updatedMovie) => {
+    setSelectedMovie(updatedMovie);
+    setMovies(movies.map(movie => 
+      movie.id === updatedMovie.id ? updatedMovie : movie
+    ));
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Liste des films</h1>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {Array.isArray(movies) && movies.map(movie => (
+          <div
+            key={movie.id}
+            onClick={() => openModal(movie)}
+            className="cursor-pointer transition-transform hover:scale-105"
+          >
+            <div className="relative">
+              <img
+                src={movie.poster_url}
+                alt={movie.title}
+                className="w-full h-[300px] object-cover rounded-lg shadow-lg"
+                onError={(e) => {
+                  e.target.src = '/placeholder-movie.jpg';
+                  e.target.onerror = null;
+                }}
+              />
+              {movie.is_liked && (
+                <span className="absolute top-2 right-2 text-red-500 text-2xl">❤️</span>
+              )}
+              {movie.is_viewed && (
+                <span className="absolute top-2 left-2 text-green-500 text-xl">✓</span>
+              )}
+            </div>
+            <h2 className="mt-2 text-lg font-semibold text-center">{movie.title}</h2>
+          </div>
+        ))}
+      </div>
+
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={closeModal}
+        style={customModalStyles}
+        contentLabel="Détails du film"
+      >
+        {selectedMovie && (
+          <div className="relative">
+            <button
+              onClick={closeModal}
+              className="absolute top-0 right-0 text-gray-600 hover:text-gray-800"
+            >
+              ✕
+            </button>
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="md:w-1/3">
+                <img
+                  src={selectedMovie.poster_url}
+                  alt={selectedMovie.title}
+                  className="w-full rounded-lg shadow-lg"
+                  onError={(e) => {
+                    e.target.src = '/placeholder-movie.jpg';
+                    e.target.onerror = null;
+                  }}
+                />
+              </div>
+              <div className="md:w-2/3">
+                <h1 className="text-2xl font-bold mb-2">{selectedMovie.title}</h1>
+                <p className="text-gray-600 mb-2">
+                  {selectedMovie.release_year} • {selectedMovie.genre}
+                </p>
+                <p className="text-gray-700 mb-4">{selectedMovie.description}</p>
+                
+                <MovieActions
+                  movie={selectedMovie}
+                  onUpdate={handleMovieUpdate}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
+// import React from 'react';
+// import { Navigate } from 'react-router-dom';
+
+// export default function PrivateRoute({ children }) {
+//   const token = localStorage.getItem('token');
+//   return token ? children : <Navigate to="/login"/>;
+// }
+import React from 'react';
+import RegisterForm from './RegisterForm';
+
+const Register = () => {
+    return (
+        <div>
+            <RegisterForm />
+        </div>
+    );
+};
+
+export default Register; 
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
+const RegisterForm = () => {
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        password: '',
+        password2: ''
+    });
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+
+        try {
+            const response = await axios.post('http://localhost:8000/api/users/register/', formData);
+            setSuccess('Inscription réussie ! Redirection...');
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
+        } catch (err) {
+            if (err.response) {
+                // Le serveur a répondu avec un statut d'erreur
+                const errorData = err.response.data;
+                if (typeof errorData === 'object') {
+                    // Si l'erreur est un objet, afficher le premier message d'erreur
+                    const firstError = Object.values(errorData)[0];
+                    setError(Array.isArray(firstError) ? firstError[0] : firstError);
+                } else {
+                    setError('Une erreur est survenue l\'inscription');
+                }
+            } else if (err.request) {
+                // La requête a été faite mais aucune réponse n'a été reçue
+                setError('Impossible de contacter le serveur');
+            } else {
+                // Une erreur s'est produite lors de la configuration de la requête
+                setError('Une erreur est survenue');
+            }
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8">
+                <div>
+                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                        Créer un compte
+                    </h2>
+                </div>
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                    {error && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                            <span className="block sm:inline">{error}</span>
+                        </div>
+                    )}
+                    {success && (
+                        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                            <span className="block sm:inline">{success}</span>
+                        </div>
+                    )}
+                    <div className="rounded-md shadow-sm -space-y-px">
+                        <div>
+                            <label htmlFor="username" className="sr-only">Nom d'utilisateur</label>
+                            <input
+                                id="username"
+                                name="username"
+                                type="text"
+                                required
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                placeholder="Nom d'utilisateur"
+                                value={formData.username}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="email" className="sr-only">Email</label>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                required
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                placeholder="Email"
+                                value={formData.email}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="password" className="sr-only">Mot de passe</label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                placeholder="Mot de passe"
+                                value={formData.password}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="password2" className="sr-only">Confirmer le mot de passe</label>
+                            <input
+                                id="password2"
+                                name="password2"
+                                type="password"
+                                required
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                placeholder="Confirmer le mot de passe"
+                                value={formData.password2}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <button
+                            type="submit"
+                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            S'inscrire
+                        </button>
+                    </div>
+                </form>
+                <div className="text-center">
+                    <p className="text-sm text-gray-600">
+                        Déjà un compte ?{' '}
+                        <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+                            Se connecter
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default RegisterForm; 
+import { createContext, useContext, useEffect, useState } from "react";
+import { getMe, isAuthenticated } from "../api/authAPI";
+
+const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUser = async () => {
+    try {
+      if (isAuthenticated()) {
+        const res = await getMe();
+        setUser(res.data);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification de la session:', error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  const value = {
+    user,
+    setUser,
+    loading,
+    isAuthenticated: isAuthenticated()
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
+
+const EmailVerificationPage = () => {
+    const [code, setCode] = useState(['', '', '', '', '', '']);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
+    const [resendDisabled, setResendDisabled] = useState(false);
+    const [countdown, setCountdown] = useState(0);
+    
+    const navigate = useNavigate();
+    const location = useLocation();
+    const email = location.state?.email || localStorage.getItem('verificationEmail');
+
+    useEffect(() => {
+        if (!email) {
+            navigate('/register');
+        } else {
+            localStorage.setItem('verificationEmail', email);
+        }
+    }, [email, navigate]);
+
+    useEffect(() => {
+        let timer;
+        if (countdown > 0) {
+            timer = setInterval(() => {
+                setCountdown(prev => prev - 1);
+            }, 1000);
+        } else {
+            setResendDisabled(false);
+        }
+        return () => clearInterval(timer);
+    }, [countdown]);
+
+    const handleCodeChange = (index, value) => {
+        if (value.length > 1) return; // Empêcher plus d'un caractère
+        
+        const newCode = [...code];
+        newCode[index] = value;
+        setCode(newCode);
+
+        // Auto-focus sur le champ suivant
+        if (value && index < 5) {
+            const nextInput = document.querySelector(`input[name="code-${index + 1}"]`);
+            if (nextInput) nextInput.focus();
+        }
+    };
+
+    const handleKeyDown = (index, e) => {
+        if (e.key === 'Backspace' && !code[index] && index > 0) {
+            // Focus sur le champ précédent lors de la suppression
+            const prevInput = document.querySelector(`input[name="code-${index - 1}"]`);
+            if (prevInput) {
+                prevInput.focus();
+                const newCode = [...code];
+                newCode[index - 1] = '';
+                setCode(newCode);
+            }
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+            const verificationCode = code.join('');
+            const response = await axios.post('http://localhost:8000/api/users/verify-email/', {
+                email,
+                code: verificationCode
+            });
+
+            setSuccess(true);
+            localStorage.removeItem('verificationEmail');
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Code de vérification invalide');
+            setCode(['', '', '', '', '', '']);
+            // Focus sur le premier champ après une erreur
+            document.querySelector('input[name="code-0"]')?.focus();
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendCode = async () => {
+        setError('');
+        setResendDisabled(true);
+        setCountdown(60); // 60 secondes avant de pouvoir renvoyer
+
+        try {
+            await axios.post('http://localhost:8000/api/users/resend-verification/', { email });
+            setError('');
+        } catch (err) {
+            setError('Erreur lors de l\'envoi du code. Veuillez réessayer.');
+            setResendDisabled(false);
+            setCountdown(0);
+        }
+    };
+
+    if (!email) return null;
+
+    return (
+        <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md">
+                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Vérification de votre email
+                </h2>
+                <p className="mt-2 text-center text-sm text-gray-600">
+                    Nous avons envoyé un code à {email}
+                </p>
+            </div>
+
+            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                    {success ? (
+                        <div className="rounded-md bg-green-50 p-4">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm font-medium text-green-800">
+                                        Email vérifié avec succès ! Redirection...
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div>
+                                <label htmlFor="code" className="block text-sm font-medium text-gray-700">
+                                    Code de vérification
+                                </label>
+                                <div className="mt-1 flex justify-between">
+                                    {code.map((digit, index) => (
+                                        <input
+                                            key={index}
+                                            type="text"
+                                            name={`code-${index}`}
+                                            maxLength="1"
+                                            value={digit}
+                                            onChange={(e) => handleCodeChange(index, e.target.value)}
+                                            onKeyDown={(e) => handleKeyDown(index, e)}
+                                            className="w-12 h-12 text-center text-xl font-semibold border-2 rounded-lg focus:border-indigo-500 focus:ring-indigo-500"
+                                            required
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            {error && (
+                                <div className="rounded-md bg-red-50 p-4">
+                                    <div className="flex">
+                                        <div className="flex-shrink-0">
+                                            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div className="ml-3">
+                                            <p className="text-sm font-medium text-red-800">
+                                                {error}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div>
+                                <button
+                                    type="submit"
+                                    disabled={loading || code.some(digit => !digit)}
+                                    className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                                        loading || code.some(digit => !digit)
+                                            ? 'bg-indigo-400 cursor-not-allowed'
+                                            : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                                    }`}
+                                >
+                                    {loading ? 'Vérification...' : 'Vérifier'}
+                                </button>
+                            </div>
+
+                            <div className="text-center">
+                                <button
+                                    type="button"
+                                    onClick={handleResendCode}
+                                    disabled={resendDisabled}
+                                    className="text-sm text-indigo-600 hover:text-indigo-500 disabled:text-gray-400"
+                                >
+                                    {countdown > 0
+                                        ? `Renvoyer le code (${countdown}s)`
+                                        : "Renvoyer le code"}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default EmailVerificationPage; 

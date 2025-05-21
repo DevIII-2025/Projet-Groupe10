@@ -12,6 +12,8 @@ import ListContent from "./components/ListContent";
 import MovieActions from "./components/MovieActions";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import axiosInstance from './api/axiosConfig';
+import RegisterForm from "./components/RegisterForm";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
 Modal.setAppElement('#root');
 
@@ -750,8 +752,10 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginForm />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/register" element={<RegisterForm />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="*" element={<ProtectedApp />} />
+
         </Routes>
       </AuthProvider>
     </Router>

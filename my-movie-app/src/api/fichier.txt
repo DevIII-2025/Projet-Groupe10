@@ -1,0 +1,273 @@
+// src/api/authAPI.js
+import axios from "axios";
+import axiosInstance, { API_URL } from './axiosConfig';
+
+const AUTH_URL = 'http://127.0.0.1:8000/api/users';
+
+// Fonction pour rafraîchir le token
+const refreshToken = async () => {
+  try {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await axios.post('http://localhost:8000/api/users/token/refresh/', {
+      refresh: refreshToken
+    });
+
+    const { access } = response.data;
+    localStorage.setItem('jwt_token', access);
+    return access;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    // Si le refresh échoue, on déconnecte l'utilisateur
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('refresh_token');
+    window.location.href = '/login';
+    throw error;
+  }
+};
+
+export const login = async (username, password) => {
+  try {
+    const response = await axiosInstance.post('/users/login/', { 
+      username, 
+      password 
+    });
+    
+    // Stocker les tokens
+    const { access_token, refresh_token } = response.data;
+    if (access_token) {
+      localStorage.setItem('jwt_token', access_token);
+    }
+    if (refresh_token) {
+      localStorage.setItem('refresh_token', refresh_token);
+    }
+    return response;
+  } catch (error) {
+    console.error('Error during login:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const getMe = async () => {
+  try {
+    const response = await axiosInstance.get('/users/me/');
+    return response;
+  } catch (error) {
+    console.error('Error fetching user profile:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const logout = async () => {
+  try {
+    const response = await axiosInstance.post('/users/logout/');
+    // Supprimer les tokens
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('refresh_token');
+    return response;
+  } catch (error) {
+    console.error('Error during logout:', error.response?.data || error.message);
+    // Même en cas d'erreur, on supprime les tokens
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('refresh_token');
+    throw error;
+  }
+};
+
+export const isAuthenticated = () => {
+  const token = localStorage.getItem('jwt_token');
+  const refreshToken = localStorage.getItem('refresh_token');
+  return !!token && !!refreshToken;
+};
+import axios from 'axios';
+
+const BASE_URL = 'http://127.0.0.1:8000';
+const API_URL = `${BASE_URL}/api`;
+
+const axiosInstance = axios.create({
+    baseURL: API_URL,
+    withCredentials: true,
+});
+
+// Intercepteur pour ajouter le token à chaque requête
+axiosInstance.interceptors.request.use((config) => {
+    const token = localStorage.getItem('jwt_token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
+// Fonction pour rafraîchir le token
+const refreshToken = async () => {
+    try {
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (!refreshToken) {
+            throw new Error('No refresh token available');
+        }
+
+        const response = await axios.post(`${API_URL}/users/token/refresh/`, {
+            refresh: refreshToken
+        }, {
+            withCredentials: true
+        });
+
+        const { access } = response.data;
+        localStorage.setItem('jwt_token', access);
+        return access;
+    } catch (error) {
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
+        throw error;
+    }
+};
+
+// Intercepteur pour gérer les erreurs 401 et rafraîchir le token
+axiosInstance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+
+        // Si l'erreur est 401 et qu'on n'a pas encore essayé de rafraîchir le token
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+                const newToken = await refreshToken();
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                return axiosInstance(originalRequest);
+            } catch (refreshError) {
+                return Promise.reject(refreshError);
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);
+
+export { API_URL, BASE_URL };
+export default axiosInstance; 
+import axiosInstance from './axiosConfig';
+
+// Créer une nouvelle liste
+export const createList = async (name, description = '') => {
+    try {
+        const response = await axiosInstance.post('/lists/', {
+            name,
+            description
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating list:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors de la création de la liste');
+    }
+};
+
+// Récupérer toutes les listes de l'utilisateur
+export const getLists = async () => {
+    try {
+        console.log('Fetching lists...');
+        const response = await axiosInstance.get('/lists/');
+        console.log('Lists received:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching lists:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors du chargement des listes');
+    }
+};
+
+// Récupérer une liste spécifique avec ses films
+export const getList = async (listId) => {
+    try {
+        const response = await axiosInstance.get(`/lists/${listId}/`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching list:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors du chargement de la liste');
+    }
+};
+
+// Mettre à jour une liste
+export const updateList = async (listId, name, description = '') => {
+    try {
+        const response = await axiosInstance.put(`/lists/${listId}/`, {
+            name,
+            description
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating list:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors de la mise à jour de la liste');
+    }
+};
+
+// Supprimer une liste
+export const deleteList = async (listId) => {
+    try {
+        await axiosInstance.delete(`/lists/${listId}/`);
+        return true;
+    } catch (error) {
+        console.error('Error deleting list:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors de la suppression de la liste');
+    }
+};
+
+// Ajouter un film à une liste
+export const addMovieToList = async (listId, movieId, note = '') => {
+    try {
+        console.log('Adding movie to list:', { listId, movieId, note });
+        const response = await axiosInstance.post(`/lists/${listId}/add_movie/`, {
+            movie_id: movieId,
+            note
+        });
+        console.log('Movie added successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error adding movie to list:', error.response?.data || error.message);
+        const errorMessage = error.response?.data?.detail || 
+                           error.response?.data?.error || 
+                           'Erreur lors de l\'ajout du film à la liste';
+        throw new Error(errorMessage);
+    }
+};
+
+// Retirer un film d'une liste
+export const removeMovieFromList = async (listId, movieId) => {
+    try {
+        await axiosInstance.post(`/lists/${listId}/remove_movie/`, {
+            movie_id: movieId
+        });
+        return true;
+    } catch (error) {
+        console.error('Error removing movie from list:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors du retrait du film de la liste');
+    }
+};
+
+// Liker un film
+export const likeMovie = async (movieId) => {
+    try {
+        const response = await axiosInstance.post(`/movies/${movieId}/like/`);
+        return response.data;
+    } catch (error) {
+        console.error('Error liking movie:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors du like du film');
+    }
+};
+
+// Marquer un film comme vu
+export const markMovieAsViewed = async (movieId) => {
+    try {
+        const response = await axiosInstance.post(`/movies/${movieId}/view/`);
+        return response.data;
+    } catch (error) {
+        console.error('Error marking movie as viewed:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.detail || 'Erreur lors du marquage du film comme vu');
+    }
+}; 
