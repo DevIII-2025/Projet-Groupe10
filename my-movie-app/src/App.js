@@ -63,6 +63,7 @@ function ProtectedApp() {
   const [sortOption, setSortOption] = useState("");
   const [activeFilters, setActiveFilters] = useState({ year: "", sort: "" });
   const [addMovieModalIsOpen, setAddMovieModalIsOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const fetchMovies = (page, search, sort) => {
     setCurrentPage(page);
@@ -211,32 +212,67 @@ function ProtectedApp() {
     fetchMovies(1, null, "");
   };
 
+  // Ajouter un gestionnaire de clic en dehors du menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isProfileMenuOpen && !event.target.closest('.profile-menu')) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isProfileMenuOpen]);
+
   if (loading) return <p>Chargement...</p>;
   if (!user) return <Navigate to="/login" replace />;
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm">
+      <nav className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-blue-700">CritiQ</h1>
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold text-blue-600 flex items-center">
+                <span className="mr-2">🎬</span>
+                CritiQ
+              </h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() => setShowLists(!showLists)}
-                className={`px-4 py-2 rounded-md text-white ${showLists ? 'bg-purple-600 hover:bg-purple-700' : 'bg-blue-500 hover:bg-blue-600'} transition-colors`}
+                className={`px-4 py-2 rounded-lg text-white transition-all duration-200 flex items-center space-x-2 ${
+                  showLists 
+                    ? 'bg-purple-600 hover:bg-purple-700' 
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
               >
-                {showLists ? "Voir Films" : "Voir Mes Listes"}
+                <span>{showLists ? '🎬' : '📋'}</span>
+                <span>{showLists ? 'Voir Films' : 'Voir Mes Listes'}</span>
               </button>
               <button
                 onClick={() => setAddMovieModalIsOpen(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
               >
+                <span className="mr-2">➕</span>
                 Ajouter un film
               </button>
-              <ProfileButton />
-              <LogoutButton />
+              <div className="relative profile-menu">
+                <button 
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+                >
+                  <span className="text-lg">👤</span>
+                  <span>{user?.username || 'Profil'}</span>
+                  <span className={`transform transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                {isProfileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                    <ProfileButton className="w-full text-left px-4 py-2 hover:bg-gray-100" />
+                    <LogoutButton className="w-full text-left px-4 py-2 hover:bg-gray-100" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
