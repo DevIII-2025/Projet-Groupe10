@@ -218,16 +218,20 @@ function ProtectedApp() {
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold text-gray-900">My Movie App</h1>
-              </div>
+          <div className="flex justify-between h-16 items-center">
+            <div className="flex items-center">
+              <h1 className="text-xl font-bold text-blue-700">CritiQ</h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowLists(!showLists)}
+                className={`px-4 py-2 rounded-md text-white ${showLists ? 'bg-purple-600 hover:bg-purple-700' : 'bg-blue-500 hover:bg-blue-600'} transition-colors`}
+              >
+                {showLists ? "Voir Films" : "Voir Mes Listes"}
+              </button>
               <button
                 onClick={() => setAddMovieModalIsOpen(true)}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
               >
                 Ajouter un film
               </button>
@@ -253,16 +257,7 @@ function ProtectedApp() {
           )}
 
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-4xl font-bold text-blue-600">Films disponibles</h1>
-          </div>
-
-          <div className="flex gap-4 mb-6">
-            <button
-              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
-              onClick={() => setShowLists(!showLists)}
-            >
-              {showLists ? "Voir Films" : "Voir Mes Listes"}
-            </button>
+            <h1 className="text-4xl font-bold text-blue-600">Catalogue</h1>
           </div>
 
           {showLists ? (
@@ -564,15 +559,19 @@ function ProtectedApp() {
                     {movies.map((movie) => (
                       <div 
                         key={movie.id} 
-                        className="cursor-pointer flex flex-col items-center"
-                        onClick={() => openModal(movie.id)}
+                        className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col items-center p-4"
                       >
-                        <img 
-                          src={movie.poster_url} 
-                          alt={movie.title} 
-                          className="w-full h-64 object-cover rounded transition-transform hover:scale-110" 
+                        <img
+                          src={movie.poster_url}
+                          alt={movie.title}
+                          className="w-full h-64 object-cover mb-4 rounded"
+                          onError={(e) => {
+                            e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
+                            e.target.onerror = null;
+                          }}
                         />
-                        <h3 className="mt-2 text-center font-medium line-clamp-2 overflow-hidden">{movie.title}</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">{movie.title}</h3>
+                        <span className="text-sm text-gray-500">{movie.release_year}</span>
                       </div>
                     ))}
                   </div>

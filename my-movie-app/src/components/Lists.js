@@ -6,6 +6,8 @@ const Lists = ({ onSelectList }) => {
     const [newListName, setNewListName] = useState('');
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [listToDelete, setListToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         fetchLists();
@@ -41,17 +43,20 @@ const Lists = ({ onSelectList }) => {
         }
     };
 
-    const handleDeleteList = async (listId) => {
-        if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette liste ?')) return;
-
+    const handleDeleteList = async () => {
+        if (!listToDelete) return;
+        setDeleting(true);
         try {
-            console.log('Deleting list:', listId);
-            await deleteList(listId);
+            console.log('Deleting list:', listToDelete.id);
+            await deleteList(listToDelete.id);
             console.log('List deleted successfully');
-            setLists(lists.filter(list => list.id !== listId));
+            setLists(lists.filter(list => list.id !== listToDelete.id));
+            setListToDelete(null);
         } catch (err) {
             console.error('Error deleting list:', err);
             setError(err.message || 'Erreur lors de la suppression de la liste');
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -106,7 +111,7 @@ const Lists = ({ onSelectList }) => {
                                 </p>
                             </div>
                             <button
-                                onClick={() => handleDeleteList(list.id)}
+                                onClick={() => setListToDelete(list)}
                                 className="px-3 py-1 text-red-500 hover:text-red-700"
                             >
                                 Supprimer
@@ -115,6 +120,31 @@ const Lists = ({ onSelectList }) => {
                     ))
                 )}
             </div>
+
+            {listToDelete && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-lg">
+                        <h3 className="text-lg font-bold mb-4 text-gray-800">Confirmer la suppression</h3>
+                        <p className="mb-6 text-gray-700">Voulez-vous vraiment supprimer la liste <span className="font-semibold">{listToDelete.name}</span> ?</p>
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={() => setListToDelete(null)}
+                                className="px-4 py-2 text-gray-700 hover:text-gray-900 rounded"
+                                disabled={deleting}
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={handleDeleteList}
+                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                                disabled={deleting}
+                            >
+                                {deleting ? 'Suppression...' : 'Supprimer'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

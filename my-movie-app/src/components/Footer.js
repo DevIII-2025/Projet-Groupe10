@@ -10,7 +10,7 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">À propos</h3>
             <p className="text-gray-300 text-sm">
-              My Movie App est votre plateforme pour découvrir, organiser et partager vos films préférés.
+              CritiQ votre plateforme pour découvrir, organiser et partager vos films préférés.
             </p>
           </div>
 
