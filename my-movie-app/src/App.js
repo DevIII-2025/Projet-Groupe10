@@ -13,6 +13,7 @@ import MovieActions from "./components/MovieActions";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import axiosInstance from './api/axiosConfig';
 import AddMovieModal from './components/AddMovieModal';
+import Footer from './components/Footer';
 
 Modal.setAppElement('#root');
 
@@ -617,6 +618,8 @@ function ProtectedApp() {
           setMovies(prevMovies => [...prevMovies, newMovie]);
         }}
       />
+
+      <Footer />
     </div>
   );
 }
