@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import MovieActions from './MovieActions';
+import LoadingSpinner from './LoadingSpinner';
+import ContentLoader from './ContentLoader';
 import './MovieDetails.css';
 
 const MovieDetails = ({ movie, onClose, onUpdate }) => {
@@ -13,6 +15,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
   const [reportModal, setReportModal] = useState(null);
   const [reportData, setReportData] = useState({ reason: '', description: '' });
   const [selectedReport, setSelectedReport] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
   // Fonction pour générer les étoiles
@@ -41,11 +44,14 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
   };
 
   const fetchReviews = async () => {
+    setIsLoading(true);
     try {
       const response = await axiosInstance.get(`/movies/${movie.id}/reviews/`);
       setReviews(response.data);
     } catch (error) {
       console.error("Erreur lors de la récupération des commentaires:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -141,12 +147,25 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
       )}
       <div className="movie-header">
         <h2 className="movie-title">{movie.title}</h2>
-        <button onClick={onClose} className="close-button">&times;</button>
+        <button 
+          onClick={onClose} 
+          className="close-button hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+        >
+          &times;
+        </button>
       </div>
       
       <div className="movie-content">
         <div className="movie-main-info">
-          <img src={movie.poster_url} alt={movie.title} className="movie-poster"/>
+          <img 
+            src={movie.poster_url} 
+            alt={movie.title} 
+            className="movie-poster transition-transform duration-300 hover:scale-105"
+            onError={(e) => {
+              e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
+              e.target.onerror = null;
+            }}
+          />
           <div className="movie-text">
             <p className="movie-year"><strong>Année :</strong> {movie.release_year}</p>
             <p className="movie-genre"><strong>Genre :</strong> {movie.genre}</p>
@@ -178,14 +197,14 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
         <div className="reviews-section">
           <div className="reviews-tabs">
             <button 
-              className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
+              className={`tab-button ${activeTab === 'all' ? 'active' : ''} transition-colors duration-200`}
               onClick={() => setActiveTab('all')}
             >
               Tous les commentaires
             </button>
             {user?.is_staff && (
               <button 
-                className={`tab-button ${activeTab === 'reported' ? 'active' : ''}`}
+                className={`tab-button ${activeTab === 'reported' ? 'active' : ''} transition-colors duration-200`}
                 onClick={() => setActiveTab('reported')}
               >
                 Commentaires signalés
@@ -200,6 +219,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
                 <select
                   value={newReview.rating}
                   onChange={(e) => setNewReview({...newReview, rating: parseInt(e.target.value)})}
+                  className="transition-colors duration-200 focus:ring-2 focus:ring-blue-500"
                 >
                   {[1, 2, 3, 4, 5].map(num => (
                     <option key={num} value={num}>{num} étoile{num > 1 ? 's' : ''}</option>
@@ -213,20 +233,36 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
                   onChange={(e) => setNewReview({...newReview, comment: e.target.value})}
                   placeholder="Partagez votre avis sur ce film..."
                   required
+                  className="transition-colors duration-200 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              {error && <div className="error-message">{error}</div>}
-              <button type="submit">Publier</button>
+              {error && <div className="error-message animate-shake">{error}</div>}
+              <button 
+                type="submit"
+                className="transition-all duration-200 hover:bg-blue-600 hover:scale-105"
+              >
+                Publier
+              </button>
             </form>
           )}
 
           <div className="reviews-list">
-            {activeTab === 'all' ? (
+            {isLoading ? (
+              <div className="space-y-4">
+                <ContentLoader type="review" />
+                <ContentLoader type="review" />
+                <ContentLoader type="review" />
+              </div>
+            ) : activeTab === 'all' ? (
               reviews.length === 0 ? (
-                <p className="no-reviews">Aucun commentaire pour le moment. Soyez le premier à donner votre avis !</p>
+                <p className="no-reviews animate-fadeIn">Aucun commentaire pour le moment. Soyez le premier à donner votre avis !</p>
               ) : (
                 reviews.map(review => (
-                  <div key={review.id} className="review">
+                  <div 
+                    key={review.id} 
+                    className="review animate-fadeIn"
+                    style={{ animationDelay: `${review.id * 0.1}s` }}
+                  >
                     <div className="review-header">
                       <div className="review-info">
                         <span className="review-author">{review.user?.username}</span>
@@ -243,7 +279,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
                         ) && (
                           <button
                             onClick={() => handleDeleteReview(review.id)}
-                            className="delete-review"
+                            className="delete-review transition-colors duration-200 hover:bg-red-100"
                             title="Supprimer le commentaire"
                           >
                             Supprimer
@@ -252,7 +288,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
                         {user && (!review.user || user.username !== review.user.username) && !review.is_reported && (
                           <button
                             onClick={() => setReportModal(review.id)}
-                            className="report-review"
+                            className="report-review transition-colors duration-200 hover:bg-yellow-100"
                             title="Signaler le commentaire"
                           >
                             Signaler
@@ -266,10 +302,14 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
               )
             ) : (
               reportedReviews.length === 0 ? (
-                <p className="no-reviews">Aucun commentaire signalé pour le moment.</p>
+                <p className="no-reviews animate-fadeIn">Aucun commentaire signalé pour le moment.</p>
               ) : (
                 reportedReviews.map(review => (
-                  <div key={review.id} className="review reported">
+                  <div 
+                    key={review.id} 
+                    className="review reported animate-fadeIn"
+                    style={{ animationDelay: `${review.id * 0.1}s` }}
+                  >
                     <div className="review-header">
                       <div className="review-info">
                         <span className="review-author">{review.user?.username}</span>
@@ -287,7 +327,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
                         ) && (
                           <button
                             onClick={() => handleDeleteReview(review.id)}
-                            className="delete-review"
+                            className="delete-review transition-colors duration-200 hover:bg-red-100"
                             title="Supprimer le commentaire"
                           >
                             Supprimer
@@ -306,8 +346,8 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
 
       {/* Modal de signalement */}
       {reportModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="modal-overlay animate-fadeIn">
+          <div className="modal-content animate-scaleIn">
             <h3>Signaler un commentaire</h3>
             <form onSubmit={(e) => {
               e.preventDefault();
@@ -319,6 +359,7 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
                   value={reportData.reason}
                   onChange={(e) => setReportData({...reportData, reason: e.target.value})}
                   required
+                  className="transition-colors duration-200 focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Sélectionnez une raison</option>
                   <option value="spam">Spam</option>
@@ -333,11 +374,23 @@ const MovieDetails = ({ movie, onClose, onUpdate }) => {
                   value={reportData.description}
                   onChange={(e) => setReportData({...reportData, description: e.target.value})}
                   placeholder="Décrivez la raison de votre signalement..."
+                  className="transition-colors duration-200 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div className="modal-actions">
-                <button type="button" onClick={() => setReportModal(null)}>Annuler</button>
-                <button type="submit">Signaler</button>
+                <button 
+                  type="button" 
+                  onClick={() => setReportModal(null)}
+                  className="transition-colors duration-200 hover:bg-gray-100"
+                >
+                  Annuler
+                </button>
+                <button 
+                  type="submit"
+                  className="transition-colors duration-200 hover:bg-blue-600"
+                >
+                  Signaler
+                </button>
               </div>
             </form>
           </div>

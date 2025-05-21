@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { likeMovie, markMovieAsViewed, getLists, addMovieToList, getList } from '../api/listAPI';
+import LoadingSpinner from './LoadingSpinner';
 
 const MovieActions = ({ movie, onUpdate }) => {
     const [lists, setLists] = useState([]);
     const [selectedList, setSelectedList] = useState('');
     const [note, setNote] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [loadingStates, setLoadingStates] = useState({
+        like: false,
+        view: false,
+        addToList: false
+    });
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
     const [movieStatus, setMovieStatus] = useState({
@@ -41,7 +46,9 @@ const MovieActions = ({ movie, onUpdate }) => {
     };
 
     const handleLike = async () => {
-        setLoading(true);
+        if (loadingStates.like) return;
+        
+        setLoadingStates(prev => ({ ...prev, like: true }));
         setError(null);
         try {
             console.log('Liking movie:', movie.id);
@@ -64,12 +71,14 @@ const MovieActions = ({ movie, onUpdate }) => {
             console.error('Error liking movie:', err);
             setError('Erreur lors du like');
         } finally {
-            setLoading(false);
+            setLoadingStates(prev => ({ ...prev, like: false }));
         }
     };
 
     const handleMarkAsViewed = async () => {
-        setLoading(true);
+        if (loadingStates.view) return;
+        
+        setLoadingStates(prev => ({ ...prev, view: true }));
         setError(null);
         try {
             console.log('Marking movie as viewed:', movie.id);
@@ -92,7 +101,7 @@ const MovieActions = ({ movie, onUpdate }) => {
             console.error('Error marking movie as viewed:', err);
             setError('Erreur lors du marquage comme vu');
         } finally {
-            setLoading(false);
+            setLoadingStates(prev => ({ ...prev, view: false }));
         }
     };
 
@@ -105,14 +114,16 @@ const MovieActions = ({ movie, onUpdate }) => {
 
     const handleAddToList = async (e) => {
         e.preventDefault();
-        if (!selectedList) return;
+        if (!selectedList || loadingStates.addToList) return;
         if (isMovieInSelectedList()) {
             setError('Ce film est déjà dans la liste sélectionnée !');
             return;
         }
-        setLoading(true);
+        
+        setLoadingStates(prev => ({ ...prev, addToList: true }));
         setError(null);
         setSuccessMessage(null);
+        
         try {
             const result = await addMovieToList(selectedList, movie.id, note);
             setNote('');
@@ -122,7 +133,7 @@ const MovieActions = ({ movie, onUpdate }) => {
         } catch (err) {
             setError(err.message || 'Erreur lors de l\'ajout à la liste');
         } finally {
-            setLoading(false);
+            setLoadingStates(prev => ({ ...prev, addToList: false }));
         }
     };
 
@@ -131,25 +142,33 @@ const MovieActions = ({ movie, onUpdate }) => {
             <div className="flex gap-4">
                 <button
                     onClick={handleLike}
-                    disabled={loading}
-                    className={`px-4 py-2 rounded transition-colors duration-200 ${
+                    disabled={loadingStates.like}
+                    className={`px-4 py-2 rounded transition-all duration-200 flex items-center justify-center min-w-[100px] ${
                         movieStatus.is_liked
                             ? 'bg-red-500 text-white hover:bg-red-600'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                    } ${loadingStates.like ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                    {movieStatus.is_liked ? '❤️ Liké' : '🤍 Like'}
+                    {loadingStates.like ? (
+                        <LoadingSpinner size="small" color={movieStatus.is_liked ? "white" : "gray"} />
+                    ) : (
+                        <span>{movieStatus.is_liked ? '❤️ Liké' : '🤍 Like'}</span>
+                    )}
                 </button>
                 <button
                     onClick={handleMarkAsViewed}
-                    disabled={loading}
-                    className={`px-4 py-2 rounded transition-colors duration-200 ${
+                    disabled={loadingStates.view}
+                    className={`px-4 py-2 rounded transition-all duration-200 flex items-center justify-center min-w-[100px] ${
                         movieStatus.is_viewed
                             ? 'bg-green-500 text-white hover:bg-green-600'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                    } ${loadingStates.view ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                    {movieStatus.is_viewed ? '✓ Vu' : '👁️ Marquer comme vu'}
+                    {loadingStates.view ? (
+                        <LoadingSpinner size="small" color={movieStatus.is_viewed ? "white" : "gray"} />
+                    ) : (
+                        <span>{movieStatus.is_viewed ? '✓ Vu' : '👁️ Marquer comme vu'}</span>
+                    )}
                 </button>
             </div>
 
@@ -158,7 +177,7 @@ const MovieActions = ({ movie, onUpdate }) => {
                     value={selectedList}
                     onChange={(e) => setSelectedList(e.target.value)}
                     className="w-full p-2 border rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    disabled={loading}
+                    disabled={loadingStates.addToList}
                 >
                     <option value="">Sélectionner une liste...</option>
                     {lists.map(list => (
@@ -172,25 +191,29 @@ const MovieActions = ({ movie, onUpdate }) => {
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="Note (optionnelle)"
                     className="w-full p-2 border rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    disabled={loading}
+                    disabled={loadingStates.addToList}
                 />
                 <button
                     type="submit"
-                    className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
-                    disabled={loading || isMovieInSelectedList()}
+                    className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
+                    disabled={loadingStates.addToList || isMovieInSelectedList()}
                 >
-                    {isMovieInSelectedList() ? 'Déjà dans la liste' : 'Ajouter à la liste'}
+                    {loadingStates.addToList ? (
+                        <LoadingSpinner size="small" color="white" />
+                    ) : (
+                        <span>{isMovieInSelectedList() ? 'Déjà dans la liste' : 'Ajouter à la liste'}</span>
+                    )}
                 </button>
             </form>
 
             {error && (
-                <div className="text-red-500 text-sm bg-red-50 p-2 rounded">
+                <div className="text-red-500 text-sm bg-red-50 p-2 rounded animate-shake">
                     {error}
                 </div>
             )}
             
             {successMessage && (
-                <div className="text-green-500 text-sm bg-green-50 p-2 rounded">
+                <div className="text-green-500 text-sm bg-green-50 p-2 rounded animate-fadeIn">
                     {successMessage}
                 </div>
             )}

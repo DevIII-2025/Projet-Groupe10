@@ -34,10 +34,10 @@ current_branch = get_current_git_branch()
 print("current_branch:",current_branch)
 
 # Chargement des variables d'environnement
-if current_branch in ["dev", "dev_stable"]   :
-    load_dotenv(BASE_DIR / ".env.dev")
-else:
+if current_branch in ["main"]   :
     load_dotenv(BASE_DIR / ".env")
+else:
+    load_dotenv(BASE_DIR / ".env.dev")
 
 
 # Clé secrète Django (ne jamais exposer en prod)

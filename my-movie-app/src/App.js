@@ -253,7 +253,7 @@ function ProtectedApp() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-300 flex items-center">
+              <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-300 flex items-center animate-float">
                 <span className="mr-2">🎬</span>
                 CritiQ
               </h1>
@@ -308,13 +308,13 @@ function ProtectedApp() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="w-full max-w-6xl">
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 animate-slideDown" role="alert">
               <span className="block sm:inline">{error}</span>
             </div>
           )}
           
           {isLoading && (
-            <div className="flex justify-center items-center py-4">
+            <div className="flex justify-center items-center py-4 animate-scaleIn">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
           )}
@@ -360,7 +360,7 @@ function ProtectedApp() {
                     </button>
                     
                     {showFilterDropdown && (
-                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50 p-4">
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50 p-4 animate-slideDown">
                         <div className="mb-4">
                           <label className="block text-gray-700 text-sm font-bold mb-2">
                             Année
@@ -481,7 +481,7 @@ function ProtectedApp() {
                 
                 <div className="mt-2 flex flex-wrap gap-2">
                   {activeFilters.year && (
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm animate-fadeIn">
                       Année: {activeFilters.year}
                       <button 
                         className="ml-1 text-blue-600" 
@@ -525,7 +525,7 @@ function ProtectedApp() {
                     </span>
                   )}
                   {activeFilters.sort && (
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm animate-fadeIn">
                       Tri: {
                         activeFilters.sort === "year-asc" ? "Année (asc)" :
                         activeFilters.sort === "year-desc" ? "Année (desc)" :
@@ -578,7 +578,7 @@ function ProtectedApp() {
                   )}
                   
                   {searchTerm && searchTerm.trim() !== "" && (
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm animate-fadeIn">
                       Recherche: {searchTerm}
                       <button 
                         className="ml-1 text-blue-600" 
@@ -618,11 +618,11 @@ function ProtectedApp() {
 
               <div className="w-full">
                 {movies.length > 0 ? (
-                  <div className="grid grid-cols-6 gap-6 mb-6">
+                  <div className="grid grid-cols-6 gap-6 mb-6 animate-fadeIn">
                     {movies.map((movie) => (
                       <div 
                         key={movie.id} 
-                        className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl relative group"
+                        className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl relative group animate-scaleIn"
                         onClick={() => openModal(movie.id)}
                       >
                         <div className="relative aspect-[2/3]">
@@ -635,7 +635,7 @@ function ProtectedApp() {
                               e.target.onerror = null;
                             }}
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 animate-fadeIn">
                             <h3 className="text-white text-lg font-semibold mb-1 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{movie.title}</h3>
                             <span className="text-white/80 text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{movie.release_year}</span>
                           </div>
@@ -645,14 +645,14 @@ function ProtectedApp() {
                   </div>
                 ) : (
                   searchTerm && searchTerm.trim() !== "" ? (
-                    <div className="w-full flex justify-center items-center py-16">
+                    <div className="w-full flex justify-center items-center py-16 animate-fadeIn">
                       <div className="text-center">
                         <p className="text-xl text-red-600 mb-4">Aucun résultat trouvé pour : <span className="font-medium">{searchTerm}</span></p>
                         <p className="text-gray-600">Essayez des termes de recherche différents ou supprimez les filtres.</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full flex justify-center items-center py-16">
+                    <div className="w-full flex justify-center items-center py-16 animate-fadeIn">
                       <p className="text-gray-600">Aucun film disponible.</p>
                     </div>
                   )
