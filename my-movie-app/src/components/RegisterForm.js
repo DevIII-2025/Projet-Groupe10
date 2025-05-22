@@ -11,7 +11,6 @@ const RegisterForm = () => {
         password2: ''
     });
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
@@ -24,25 +23,30 @@ const RegisterForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        setSuccess('');
+
+        if (formData.password !== formData.password2) {
+            setError("Les mots de passe ne correspondent pas.");
+            return;
+        }
+
         setLoading(true);
 
         try {
-            await axiosInstance.post('/users/register/', formData);
-            setSuccess('Inscription réussie ! Redirection...');
-            setTimeout(() => {
-                navigate('/login');
-            }, 2000);
+            const response = await axiosInstance.post('/users/register/', {
+                username: formData.username,
+                email: formData.email,
+                password: formData.password
+            });
+
+            const email = response.data.email;
+            localStorage.setItem('verificationEmail', email);
+            navigate('/verify-email', { state: { email } });
         } catch (err) {
             console.error('Erreur lors de l\'inscription:', err);
             if (err.response) {
                 const errorData = err.response.data;
-                if (typeof errorData === 'object') {
-                    const firstError = Object.values(errorData)[0];
-                    setError(Array.isArray(firstError) ? firstError[0] : firstError);
-                } else {
-                    setError('Une erreur est survenue lors de l\'inscription');
-                }
+                const firstError = Object.values(errorData)[0];
+                setError(Array.isArray(firstError) ? firstError[0] : firstError);
             } else if (err.request) {
                 setError('Impossible de contacter le serveur. Vérifiez votre connexion.');
             } else {
@@ -62,11 +66,6 @@ const RegisterForm = () => {
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
                         <span className="block sm:inline">{error}</span>
-                    </div>
-                )}
-                {success && (
-                    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                        <span className="block sm:inline">{success}</span>
                     </div>
                 )}
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -137,7 +136,7 @@ const RegisterForm = () => {
                         }`}
                         disabled={loading}
                     >
-                        {loading ? 'Inscription en cours...' : 'S\'inscrire'}
+                        {loading ? 'Envoi du code...' : "S'inscrire"}
                     </button>
                 </form>
                 <div className="mt-4 text-center">
@@ -153,4 +152,4 @@ const RegisterForm = () => {
     );
 };
 
-export default RegisterForm; 
+export default RegisterForm;
