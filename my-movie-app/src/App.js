@@ -413,26 +413,6 @@ function ProtectedApp() {
             <h1 className="text-4xl font-bold text-blue-600">
               Films disponibles
             </h1>
-            <div className="flex items-center gap-4">
-              <p
-                className={`text-sm px-3 py-1 rounded ${
-                  user?.is_staff ? "admin-logged" : "text-gray-600"
-                }`}
-              >
-                Connecté en tant que <strong>{user.username}</strong>
-              </p>
-              <ProfileButton />
-              <LogoutButton />
-            </div>
-          </div>
-
-          <div className="flex gap-4 mb-6">
-            <button
-              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
-              onClick={() => setShowLists(!showLists)}
-            >
-              {showLists ? "Voir Films" : "Voir Mes Listes"}
-            </button>
           </div>
 
           {showLists ? (
@@ -874,71 +854,6 @@ function ProtectedApp() {
                   Suivant
                 </button>
               </div>
-
-              <h2 className="text-2xl font-semibold mt-8">Ajouter un film</h2>
-              <form
-                onSubmit={handleSubmit}
-                className="bg-white shadow-md rounded-lg p-6 mt-4 w-full"
-              >
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="flex flex-col">
-                    <label className="mb-1 flex items-center">
-                      Titre
-                      <span className="ml-2 text-xs text-gray-500">
-                        (max 200 caractères)
-                      </span>
-                      <span className="ml-auto text-xs text-gray-500">
-                        {title.length}/200
-                      </span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Titre"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      required
-                      className="border p-2 w-full rounded"
-                      maxLength={200}
-                    />
-                  </div>
-
-                  <input
-                    type="text"
-                    placeholder="Description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
-                    className="border p-2 w-full rounded"
-                    maxLength={1000}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Année de sortie"
-                    value={releaseYear}
-                    onChange={(e) => setReleaseYear(e.target.value)}
-                    required
-                    className="border p-2 w-full rounded"
-                    min={1888}
-                    max={new Date().getFullYear()}
-                  />
-                  <input
-                    type="url"
-                    placeholder="URL de l'affiche"
-                    value={posterUrl}
-                    onChange={(e) => setPosterUrl(e.target.value)}
-                    required
-                    className="border p-2 w-full rounded"
-                    maxLength={200}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-blue-500 text-white rounded w-full mt-4 disabled:opacity-50"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Ajout en cours..." : "Ajouter"}
-                </button>
-              </form>
             </>
           )}
 

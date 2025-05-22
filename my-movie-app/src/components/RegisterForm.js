@@ -59,7 +59,7 @@ const RegisterForm = () => {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
-            <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+            <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
                 <h2 className="text-3xl font-bold text-center text-blue-600 mb-6">
                     Créer un compte
                 </h2>
