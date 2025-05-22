@@ -88,43 +88,48 @@ const refreshToken = async () => {
 
 // Intercepteur pour gérer les erreurs 401 et rafraîchir le token
 axiosInstance.interceptors.response.use(
-    (response) => {
-        console.log('Response successful:', {
-            status: response.status,
-            url: response.config.url
-        });
-        return response;
-    },
-    async (error) => {
-        console.error('Response error:', {
-            status: error.response?.status,
-            url: error.config?.url,
-            message: error.message,
-            config: error.config
-        });
+  (response) => {
+    console.log('Response successful:', {
+      status: response.status,
+      url: response.config.url
+    });
+    return response;
+  },
+  async (error) => {
+    console.error('Response error:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      message: error.message,
+      config: error.config
+    });
 
-        const originalRequest = error.config;
+    const originalRequest = error.config;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
-            console.log('Attempting to retry request with new token...');
-            originalRequest._retry = true;
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url.includes("/users/login/")
+    ) {
+      console.log('Attempting to retry request with new token...');
+      originalRequest._retry = true;
 
-            try {
-                const newToken = await refreshToken();
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                // S'assurer que l'URL est correcte pour la nouvelle tentative
-                originalRequest.baseURL = API_URL;
-                return axiosInstance(originalRequest);
-            } catch (refreshError) {
-                console.error('Token refresh failed:', refreshError);
-                return Promise.reject(refreshError);
-            }
-        }
-
-        return Promise.reject(error);
+      try {
+        const newToken = await refreshToken();
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        originalRequest.baseURL = API_URL;
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        return Promise.reject(refreshError);
+      }
     }
+
+    return Promise.reject(error);
+  }
 );
+
 
 // Exporter la configuration et l'instance
 export { API_URL, BASE_URL, defaultConfig };
 export default axiosInstance; 
+
