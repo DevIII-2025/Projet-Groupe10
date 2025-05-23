@@ -32,7 +32,7 @@ const LoginForm = () => {
       setError('');
       navigate('/');
     } catch (error) {
-      setError(error.response?.data?.message || 'Une erreur est survenue lors de la connexion');
+      setError(error.response?.data?.detail ||error.response?.data?.message ||'Une erreur est survenue lors de la connexion');
     } finally {
       setIsLoading(false);
     }
