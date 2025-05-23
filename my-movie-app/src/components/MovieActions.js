@@ -186,13 +186,13 @@ const MovieActions = ({ movie, onUpdate }) => {
                         </option>
                     ))}
                 </select>
-                <textarea
+                {/* <textarea
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="Note (optionnelle)"
                     className="w-full p-2 border rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     disabled={loadingStates.addToList}
-                />
+                /> */}
                 <button
                     type="submit"
                     className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"

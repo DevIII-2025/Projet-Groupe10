@@ -128,11 +128,6 @@ const ListContent = ({ list, onBack }) => {
                                     {movie.release_year} • {movie.genre}
                                 </p>
                                 <p className="mt-2 text-gray-700">{movie.description}</p>
-                                {note && (
-                                    <p className="mt-2 text-sm text-gray-500">
-                                        Note personnelle : {note}
-                                    </p>
-                                )}
                             </div>
                             <button
                                 onClick={() => handleRemoveMovie(movie.id)}

@@ -58,21 +58,22 @@ const RegisterForm = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
-            <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-                <h2 className="text-3xl font-bold text-center text-blue-600 mb-6">
-                    Créer un compte
-                </h2>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-blue-50 px-4">
+            <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6">
+                <div className="flex flex-col items-center mb-4">
+                    <span className="text-4xl mb-1">🎬</span>
+                    <h1 className="text-3xl font-extrabold text-blue-600 mb-1">CritiQ</h1>
+                    <h2 className="text-xl font-bold text-black mb-1">Créer un compte</h2>
+                    <p className="text-gray-600 text-center mb-1 text-sm">Rejoignez-nous pour accéder à votre espace personnel</p>
+                </div>
                 {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded relative mb-3 text-sm" role="alert">
                         <span className="block sm:inline">{error}</span>
                     </div>
                 )}
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-3">
                     <div>
-                        <label className="block mb-1 text-sm font-medium text-gray-700">
-                            Nom d'utilisateur
-                        </label>
+                        <label className="block mb-1 text-xs font-medium text-gray-700">Nom d'utilisateur</label>
                         <input
                             type="text"
                             name="username"
@@ -80,14 +81,12 @@ const RegisterForm = () => {
                             value={formData.username}
                             onChange={handleChange}
                             required
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50 text-sm"
                             disabled={loading}
                         />
                     </div>
                     <div>
-                        <label className="block mb-1 text-sm font-medium text-gray-700">
-                            Email
-                        </label>
+                        <label className="block mb-1 text-xs font-medium text-gray-700">Email</label>
                         <input
                             type="email"
                             name="email"
@@ -95,14 +94,12 @@ const RegisterForm = () => {
                             value={formData.email}
                             onChange={handleChange}
                             required
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
                             disabled={loading}
                         />
                     </div>
                     <div>
-                        <label className="block mb-1 text-sm font-medium text-gray-700">
-                            Mot de passe
-                        </label>
+                        <label className="block mb-1 text-xs font-medium text-gray-700">Mot de passe</label>
                         <input
                             type="password"
                             name="password"
@@ -110,14 +107,12 @@ const RegisterForm = () => {
                             value={formData.password}
                             onChange={handleChange}
                             required
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50 text-sm"
                             disabled={loading}
                         />
                     </div>
                     <div>
-                        <label className="block mb-1 text-sm font-medium text-gray-700">
-                            Confirmer le mot de passe
-                        </label>
+                        <label className="block mb-1 text-xs font-medium text-gray-700">Confirmer le mot de passe</label>
                         <input
                             type="password"
                             name="password2"
@@ -125,26 +120,22 @@ const RegisterForm = () => {
                             value={formData.password2}
                             onChange={handleChange}
                             required
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
                             disabled={loading}
                         />
                     </div>
                     <button
                         type="submit"
-                        className={`w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg ${
-                            loading ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
+                        className={`w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-base ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={loading}
                     >
-                        {loading ? 'Envoi du code...' : "S'inscrire"}
+                        {loading ? "Envoi du code..." : "S'inscrire"}
                     </button>
                 </form>
-                <div className="mt-4 text-center">
-                    <p className="text-sm text-gray-600">
+                <div className="mt-3 text-center">
+                    <p className="text-xs text-gray-600">
                         Déjà un compte ?{' '}
-                        <a href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                            Se connecter
-                        </a>
+                        <a href="/login" className="font-medium text-blue-600 hover:text-blue-500">Se connecter</a>
                     </p>
                 </div>
             </div>
