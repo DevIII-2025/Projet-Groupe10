@@ -5,6 +5,8 @@ const ListContent = ({ list, onBack }) => {
     const [listContent, setListContent] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [movieToRemove, setMovieToRemove] = useState(null);
+    const [removing, setRemoving] = useState(false);
 
     useEffect(() => {
         if (list?.id) {
@@ -34,8 +36,7 @@ const ListContent = ({ list, onBack }) => {
     };
 
     const handleRemoveMovie = async (movieId) => {
-        if (!window.confirm('Êtes-vous sûr de vouloir retirer ce film de la liste ?')) return;
-
+        setRemoving(true);
         try {
             console.log('Removing movie:', movieId, 'from list:', list.id);
             await removeMovieFromList(list.id, movieId);
@@ -49,6 +50,9 @@ const ListContent = ({ list, onBack }) => {
         } catch (err) {
             console.error('Error removing movie:', err);
             setError(err.message || 'Erreur lors de la suppression du film');
+        } finally {
+            setRemoving(false);
+            setMovieToRemove(null);
         }
     };
 
@@ -130,7 +134,7 @@ const ListContent = ({ list, onBack }) => {
                                 <p className="mt-2 text-gray-700">{movie.description}</p>
                             </div>
                             <button
-                                onClick={() => handleRemoveMovie(movie.id)}
+                                onClick={() => setMovieToRemove(movie)}
                                 className="px-3 py-1 text-red-500 hover:text-red-700"
                             >
                                 Retirer
@@ -143,6 +147,33 @@ const ListContent = ({ list, onBack }) => {
                     </div>
                 )}
             </div>
+
+            {movieToRemove && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-lg">
+                        <h3 className="text-lg font-bold mb-4 text-gray-800">Confirmer le retrait</h3>
+                        <p className="mb-6 text-gray-700">
+                            Voulez-vous vraiment retirer <span className="font-semibold">{movieToRemove.title}</span> de la liste ?
+                        </p>
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={() => setMovieToRemove(null)}
+                                className="px-4 py-2 text-gray-700 hover:text-gray-900 rounded"
+                                disabled={removing}
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={() => handleRemoveMovie(movieToRemove.id)}
+                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                                disabled={removing}
+                            >
+                                {removing ? 'Retrait...' : 'Retirer'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
