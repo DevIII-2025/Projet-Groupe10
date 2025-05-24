@@ -380,12 +380,13 @@ function ProtectedApp() {
                     ▼
                   </span>
                 </button>
-                {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
-                    <ProfileButton className="w-full text-left px-4 py-2 hover:bg-gray-100" />
-                    <LogoutButton className="w-full text-left px-4 py-2 hover:bg-gray-100" />
-                  </div>
-                )}
+                <div
+                  className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 transition-all duration-300 ease-out transform
+                    ${isProfileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}`}
+                >
+                  <ProfileButton className="w-full text-left px-4 py-2 hover:bg-gray-100" />
+                  <LogoutButton className="w-full text-left px-4 py-2 hover:bg-gray-100" />
+                </div>
               </div>
             </div>
           </div>

@@ -88,19 +88,22 @@ const Lists = ({ onSelectList }) => {
             )}
             
             <form onSubmit={handleCreateList} className="mb-6">
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                     <input
                         type="text"
                         value={newListName}
                         onChange={(e) => setNewListName(e.target.value)}
                         placeholder="Nouvelle liste..."
-                        className="flex-1 p-2 border rounded"
+                        className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm shadow-sm focus:shadow-md focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:focus:ring-blue-400/50 dark:focus:border-blue-400 transition-all duration-300 outline-none placeholder-gray-400 dark:placeholder-gray-500"
                     />
                     <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        className="relative px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 overflow-hidden group"
                     >
-                        Créer
+                        <span className="relative z-10">Créer</span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                        <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
+                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-blue-500 dark:from-blue-500 dark:to-blue-600 rounded-xl blur opacity-0 group-hover:opacity-75 transition-opacity duration-200" />
                     </button>
                 </div>
             </form>
@@ -114,23 +117,24 @@ const Lists = ({ onSelectList }) => {
                     lists.map(list => (
                         <div
                             key={list.id}
-                            className="flex items-center justify-between p-3 bg-white rounded shadow hover:shadow-md transition-shadow"
+                            className="group relative flex items-center justify-between p-4 rounded-xl backdrop-blur-md bg-white/30 dark:bg-gray-800/30 border border-white/20 dark:border-gray-700/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:bg-white/40 dark:hover:bg-gray-800/40"
                         >
                             <div
                                 className="flex-1 cursor-pointer"
                                 onClick={() => onSelectList(list)}
                             >
-                                <h3 className="font-semibold">{list.name}</h3>
-                                <p className="text-sm text-gray-500">
+                                <h3 className="font-semibold text-gray-800 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{list.name}</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
                                     {list.movies_count} films
                                 </p>
                             </div>
                             <button
                                 onClick={() => setListToDelete(list)}
-                                className="px-3 py-1 text-red-500 hover:text-red-700"
+                                className="group relative px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all duration-300 hover:scale-105 active:scale-95"
                             >
                                 Supprimer
                             </button>
+                            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/10 group-hover:via-blue-500/5 group-hover:to-blue-500/0 transition-all duration-500 -z-10" />
                         </div>
                     ))
                 )}

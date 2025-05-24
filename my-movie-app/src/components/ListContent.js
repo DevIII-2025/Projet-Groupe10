@@ -115,30 +115,39 @@ const ListContent = ({ list, onBack }) => {
                     listContent.movies.map(({ movie, note }) => (
                         <div
                             key={movie.id}
-                            className="flex items-start gap-4 p-4 bg-white rounded shadow hover:shadow-md transition-shadow"
+                            className="group relative flex items-start gap-6 p-6 rounded-2xl backdrop-blur-md bg-white/30 dark:bg-gray-800/30 border border-white/20 dark:border-gray-700/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:bg-white/40 dark:hover:bg-gray-800/40"
                         >
-                            <img
-                                src={movie.poster_url}
-                                alt={movie.title}
-                                className="w-24 h-36 object-cover rounded"
-                                onError={(e) => {
-                                    e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
-                                    e.target.onerror = null;
-                                }}
-                            />
-                            <div className="flex-1">
-                                <h3 className="text-xl font-semibold">{movie.title}</h3>
-                                <p className="text-gray-600">
+                            <div className="relative w-32 h-48 flex-shrink-0">
+                                <img
+                                    src={movie.poster_url}
+                                    alt={movie.title}
+                                    className="w-full h-full object-cover rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300"
+                                    onError={(e) => {
+                                        e.target.src = 'https://img.freepik.com/vecteurs-premium/vecteur-icone-image-par-defaut-page-image-manquante-pour-conception-site-web-application-mobile-aucune-photo-disponible_87543-11093.jpg';
+                                        e.target.onerror = null;
+                                    }}
+                                />
+                                <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{movie.title}</h3>
+                                <p className="text-gray-600 dark:text-gray-400 mt-1">
                                     {movie.release_year} • {movie.genre}
                                 </p>
-                                <p className="mt-2 text-gray-700">{movie.description}</p>
+                                <p className="mt-3 text-gray-700 dark:text-gray-300 line-clamp-3">{movie.description}</p>
+                                {note && (
+                                    <p className="mt-3 text-sm text-gray-500 dark:text-gray-400 italic">
+                                        Note : {note}
+                                    </p>
+                                )}
                             </div>
                             <button
                                 onClick={() => setMovieToRemove(movie)}
-                                className="px-3 py-1 text-red-500 hover:text-red-700"
+                                className="absolute top-4 right-4 px-3 py-1.5 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors duration-300"
                             >
                                 Retirer
                             </button>
+                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/10 group-hover:via-blue-500/5 group-hover:to-blue-500/0 transition-all duration-500 -z-10" />
                         </div>
                     ))
                 ) : (
