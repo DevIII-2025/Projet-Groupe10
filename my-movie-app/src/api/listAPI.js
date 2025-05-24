@@ -9,8 +9,15 @@ export const createList = async (name, description = '') => {
         });
         return response.data;
     } catch (error) {
-        console.error('Error creating list:', error.response?.data || error.message);
-        throw new Error(error.response?.data?.detail || 'Erreur lors de la création de la liste');
+        let message = error.response?.data?.detail || 'Erreur lors de la création de la liste';
+        if (error.response?.data?.name) {
+            if (Array.isArray(error.response.data.name)) {
+                message = error.response.data.name.join(' ');
+            } else {
+                message = error.response.data.name;
+            }
+        }
+        throw new Error(message);
     }
 };
 

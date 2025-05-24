@@ -61,6 +61,15 @@ class ListSerializer(serializers.ModelSerializer):
     def get_movies_count(self, obj):
         return obj.movies.count()
 
+    def validate_name(self, value):
+        user = self.context['request'].user
+        qs = List.objects.filter(name=value, created_by=user)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError("Une liste avec ce nom existe déjà.")
+        return value
+
 class ListDetailSerializer(ListSerializer):
     movies = serializers.SerializerMethodField()
 

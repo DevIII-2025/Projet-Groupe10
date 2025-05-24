@@ -5,6 +5,7 @@ const Lists = ({ onSelectList }) => {
     const [lists, setLists] = useState([]);
     const [newListName, setNewListName] = useState('');
     const [error, setError] = useState(null);
+    const [isErrorVisible, setIsErrorVisible] = useState(false);
     const [loading, setLoading] = useState(true);
     const [listToDelete, setListToDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
@@ -27,19 +28,32 @@ const Lists = ({ onSelectList }) => {
         }
     };
 
+    // Fonction pour afficher une erreur temporaire
+    const showTemporaryError = (message) => {
+        setError(message);
+        setIsErrorVisible(true);
+        setTimeout(() => {
+            setIsErrorVisible(false);
+            setTimeout(() => setError(null), 300);
+        }, 3000);
+    };
+
     const handleCreateList = async (e) => {
         e.preventDefault();
         if (!newListName.trim()) return;
 
+        // Vérification côté frontend
+        if (lists.some(list => list.name.trim().toLowerCase() === newListName.trim().toLowerCase())) {
+            showTemporaryError('Une liste avec ce nom existe déjà.');
+            return;
+        }
+
         try {
-            console.log('Creating new list:', newListName);
             const newList = await createList(newListName);
-            console.log('New list created:', newList);
             setLists([...lists, newList]);
             setNewListName('');
         } catch (err) {
-            console.error('Error creating list:', err);
-            setError(err.message || 'Erreur lors de la création de la liste');
+            showTemporaryError(err.message);
         }
     };
 
@@ -61,16 +75,17 @@ const Lists = ({ onSelectList }) => {
     };
 
     if (loading) return <div className="text-center py-4">Chargement des listes...</div>;
-    if (error) return (
-        <div className="text-red-500 p-4 bg-red-50 rounded-lg">
-            <p className="font-semibold">Erreur :</p>
-            <p>{error}</p>
-        </div>
-    );
 
     return (
         <div className="w-full max-w-md mx-auto p-4">
             <h2 className="text-2xl font-bold mb-4">Mes Listes</h2>
+            {error && (
+                <div className={`mb-4 p-3 bg-red-100 text-red-700 rounded-lg transition-all duration-300 transform ${
+                    isErrorVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+                }`}>
+                    {error}
+                </div>
+            )}
             
             <form onSubmit={handleCreateList} className="mb-6">
                 <div className="flex gap-2">

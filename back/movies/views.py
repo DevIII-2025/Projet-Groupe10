@@ -13,9 +13,10 @@ from rest_framework.decorators import action
 import logging
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter, OrderingFilter
-from django.db import models
+from django.db import models, IntegrityError
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.db.models import Q
+from rest_framework import serializers
 
 logger = logging.getLogger(__name__)
 
@@ -350,7 +351,10 @@ class ListViewSet(viewsets.ModelViewSet):
         return context
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        try:
+            serializer.save(created_by=self.request.user)
+        except IntegrityError:
+            raise serializers.ValidationError({'name': 'Une liste avec ce nom existe déjà.'})
 
     @action(detail=True, methods=['post'])
     def add_movie(self, request, pk=None):
