@@ -117,7 +117,7 @@ const Lists = ({ onSelectList }) => {
                     lists.map(list => (
                         <div
                             key={list.id}
-                            className="group relative flex items-center justify-between p-4 rounded-xl backdrop-blur-md bg-white/30 dark:bg-gray-800/30 border border-white/20 dark:border-gray-700/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:bg-white/40 dark:hover:bg-gray-800/40"
+                            className="group relative flex items-center justify-between p-4 rounded-xl bg-white/95 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
                         >
                             <div
                                 className="flex-1 cursor-pointer"
