@@ -78,7 +78,7 @@ const Lists = ({ onSelectList }) => {
 
     return (
         <div className="w-full max-w-md mx-auto p-4">
-            <h2 className="text-2xl font-bold mb-4">Mes Listes</h2>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Mes Listes</h2>
             {error && (
                 <div className={`mb-4 p-3 bg-red-100 text-red-700 rounded-lg transition-all duration-300 transform ${
                     isErrorVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
@@ -117,7 +117,7 @@ const Lists = ({ onSelectList }) => {
                     lists.map(list => (
                         <div
                             key={list.id}
-                            className="group relative flex items-center justify-between p-4 rounded-xl bg-white/95 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                            className="group relative flex items-center justify-between p-4 rounded-xl bg-white/95 dark:bg-gray-700/80 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
                         >
                             <div
                                 className="flex-1 cursor-pointer"
