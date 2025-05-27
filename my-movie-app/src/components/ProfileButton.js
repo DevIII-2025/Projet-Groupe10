@@ -39,18 +39,27 @@ const ProfileModal = ({ isOpen, onClose, user, setUser }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) {
+      setSuccess('');
+      setError('');
+      setLoading(false);
       setFormData({
         username: user?.username || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
-      setError('');
-      setSuccess('');
-      setLoading(false);
     }
   }, [isOpen, user]);
+
+  useEffect(() => {
+    if (success === "Mot de passe modifié avec succès !") {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, onClose]);
 
   const handleChange = (e) => {
     setFormData({
@@ -80,11 +89,11 @@ const ProfileModal = ({ isOpen, onClose, user, setUser }) => {
 
       const response = await axiosInstance.patch('/users/update-profile/', updateData);
       setUser({ ...user, username: response.data.username });
-      setSuccess('Profil mis à jour avec succès');
-      setTimeout(() => {
-        onClose();
-        setSuccess('');
-      }, 2000);
+      setSuccess(
+        formData.newPassword
+          ? "Mot de passe modifié avec succès !"
+          : "Profil mis à jour avec succès"
+      );
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'Une erreur est survenue');
     } finally {
