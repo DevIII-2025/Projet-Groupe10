@@ -14,12 +14,31 @@ const Lists = ({ onSelectList }) => {
         fetchLists();
     }, []);
 
+    // Ajout forcé de Favoris et Déjà vu si absents
+    const ensureSystemLists = (lists) => {
+        const systemLists = [
+            { name: 'Favoris', description: 'Films que vous avez aimés', movies_count: 0, is_system: true, id: 'favoris-fake' },
+            { name: 'Déjà vu', description: 'Films que vous avez vus', movies_count: 0, is_system: true, id: 'dejavu-fake' },
+        ];
+        const names = lists.map(l => l.name);
+        systemLists.forEach(sys => {
+            if (!names.includes(sys.name)) {
+                lists.push(sys);
+            }
+        });
+        // Toujours trier pour mettre Favoris et Déjà vu en haut
+        return [
+            ...systemLists.map(sys => lists.find(l => l.name === sys.name)),
+            ...lists.filter(l => !systemLists.some(sys => sys.name === l.name))
+        ].filter(Boolean);
+    };
+
     const fetchLists = async () => {
         try {
             console.log('Fetching lists...');
             const data = await getLists();
             console.log('Lists data received:', data);
-            setLists(data);
+            setLists(ensureSystemLists(data));
         } catch (err) {
             console.error('Error fetching lists:', err);
             setError(err.message || 'Erreur lors du chargement des listes');
@@ -128,12 +147,15 @@ const Lists = ({ onSelectList }) => {
                                     {list.movies_count} films
                                 </p>
                             </div>
-                            <button
-                                onClick={() => setListToDelete(list)}
-                                className="group relative px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all duration-300 hover:scale-105 active:scale-95"
-                            >
-                                Supprimer
-                            </button>
+                            {/* On ne permet pas de supprimer Favoris/Déjà vu */}
+                            {!list.is_system && (
+                                <button
+                                    onClick={() => setListToDelete(list)}
+                                    className="group relative px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all duration-300 hover:scale-105 active:scale-95"
+                                >
+                                    Supprimer
+                                </button>
+                            )}
                             <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/10 group-hover:via-blue-500/5 group-hover:to-blue-500/0 transition-all duration-500 -z-10" />
                         </div>
                     ))
