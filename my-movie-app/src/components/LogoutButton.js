@@ -25,7 +25,7 @@ const LogoutButton = () => {
   return (
     <button
       onClick={handleLogout}
-      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors duration-200"
+      className="w-full text-left px-4 py-2 font-semibold rounded bg-white text-red-600 border border-red-600 hover:bg-red-600 hover:text-white focus:bg-red-600 focus:text-white focus:outline-none transition-colors duration-200 mt-2"
     >
       Se déconnecter
     </button>
