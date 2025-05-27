@@ -16,6 +16,7 @@ import AddMovieModal from "./components/AddMovieModal";
 import Footer from "./components/Footer";
 import RegisterForm from "./components/RegisterForm";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
+import ProfileModal from "./components/ProfileButton";
 Modal.setAppElement("#root");
 
 const customStyles = {
@@ -42,7 +43,7 @@ const customStyles = {
 };
 
 function ProtectedApp() {
-  const { user, loading } = useAuth();
+  const { user, setUser, loading } = useAuth();
   console.log("USER CONTEXT :", user);
   const [movies, setMovies] = useState([]);
   const [title, setTitle] = useState("");
@@ -79,6 +80,7 @@ function ProtectedApp() {
     }
     return false;
   });
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const fetchMovies = (page, search, sort) => {
     setCurrentPage(page);
@@ -317,11 +319,15 @@ function ProtectedApp() {
       if (isProfileMenuOpen && !event.target.closest(".profile-menu")) {
         setIsProfileMenuOpen(false);
       }
+      // Pour le menu filtre
+      if (showFilterDropdown && !event.target.closest(".filter-dropdown")) {
+        setShowFilterDropdown(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isProfileMenuOpen]);
+  }, [isProfileMenuOpen, showFilterDropdown]);
 
   if (loading) return <p>Chargement...</p>;
   if (!user) return <Navigate to="/login" replace />;
@@ -386,13 +392,26 @@ function ProtectedApp() {
                   </span>
                 </button>
                 <div
-                  className={`absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-4 z-50 transition-all duration-300 ease-out transform
+                  className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 transition-all duration-300 ease-out transform
                     ${isProfileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}`}
                 >
-                  <div className="flex flex-col items-center gap-2 px-4">
-                    <ProfileButton className="w-full text-center px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors duration-200" />
-                    <LogoutButton className="w-full text-center px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors duration-200" />
-                  </div>
+                  <button
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100 text-blue-600 font-semibold rounded"
+                    onClick={() => {
+                      setShowProfileModal(true);
+                      setIsProfileMenuOpen(false);
+                    }}
+                  >
+                    Modifier profil
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await (await import('./components/LogoutButton')).default();
+                    }}
+                    className="w-full text-left px-4 py-2 font-semibold rounded bg-white text-red-600  hover:bg-red-600 hover:text-white transition-colors duration-200 mt-2"
+                  >
+                    Se déconnecter
+                  </button>
                 </div>
               </div>
             </div>
@@ -462,7 +481,7 @@ function ProtectedApp() {
                     </button>
 
                     {showFilterDropdown && (
-                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50 p-4">
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50 p-4 filter-dropdown">
                         <div className="mb-4">
                           <label className="block text-gray-700 text-sm font-bold mb-2">
                             Année
@@ -888,6 +907,13 @@ function ProtectedApp() {
         onMovieAdded={(newMovie) => {
           setMovies((prevMovies) => [...prevMovies, newMovie]);
         }}
+      />
+
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        user={user}
+        setUser={typeof setUser !== 'undefined' ? setUser : () => {}}
       />
 
       <Footer />
