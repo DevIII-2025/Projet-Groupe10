@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import axiosInstance from '../api/axiosConfig';
 
@@ -33,6 +33,16 @@ const AddMovieModal = ({ isOpen, onClose, onMovieAdded }) => {
   const [posterUrl, setPosterUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle('');
+      setDescription('');
+      setReleaseYear('');
+      setPosterUrl('');
+      setError(null);
+    }
+  }, [isOpen]);
 
   const validateForm = () => {
     if (!title.trim()) {
@@ -161,7 +171,11 @@ const AddMovieModal = ({ isOpen, onClose, onMovieAdded }) => {
               onChange={(e) => setPosterUrl(e.target.value)} 
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
+              maxLength={200}
             />
+            {posterUrl.length === 0 && (
+              <span className="text-xs text-gray-400">max. 200 caractères</span>
+            )}
           </div>
 
           {error && (
