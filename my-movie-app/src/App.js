@@ -348,7 +348,12 @@ function ProtectedApp() {
                 {darkMode ? "☀️" : "🌙"}
               </button>
               <button
-                onClick={() => setShowLists(!showLists)}
+                onClick={() => {
+                  if (!showLists) {
+                    setSelectedList(null);
+                  }
+                  setShowLists(!showLists);
+                }}
                 className={`px-4 py-2 rounded-lg text-white transition-all duration-200 flex items-center space-x-2 ${
                   showLists
                     ? "bg-purple-600 hover:bg-purple-700"
