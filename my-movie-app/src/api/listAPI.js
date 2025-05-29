@@ -41,6 +41,9 @@ export const getList = async (listId) => {
         return response.data;
     } catch (error) {
         console.error('Error fetching list:', error.response?.data || error.message);
+        if (error.response && error.response.status === 404) {
+            return { movies: [] }; // Retourne un objet de liste vide pour les 404
+        }
         throw new Error(error.response?.data?.detail || 'Erreur lors du chargement de la liste');
     }
 };
