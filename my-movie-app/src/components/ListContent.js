@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getList, removeMovieFromList } from '../api/listAPI';
+import axiosInstance from '../api/axiosConfig';
 
 const ListContent = ({ list, onBack }) => {
     const [listContent, setListContent] = useState(null);
@@ -39,7 +40,18 @@ const ListContent = ({ list, onBack }) => {
         setRemoving(true);
         try {
             console.log('Removing movie:', movieId, 'from list:', list.id);
-            await removeMovieFromList(list.id, movieId);
+
+            if (list.is_system) {
+                if (list.name === "Favoris") {
+                    await axiosInstance.post(`/movies/${movieId}/like/`, { block: false });
+                } else if (list.name === "Déjà vu") {
+                    await axiosInstance.post(`/movies/${movieId}/view/`, { block: false });
+                } else {
+                    await removeMovieFromList(list.id, movieId);
+                }
+            } else {
+                await removeMovieFromList(list.id, movieId);
+            }
             
             setListContent(prev => ({
                 ...prev,

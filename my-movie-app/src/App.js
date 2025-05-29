@@ -469,11 +469,13 @@ function ProtectedApp() {
             </div>
           )}
 
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-4xl font-bold text-blue-600">
-              Films disponibles
-            </h1>
-          </div>
+          {!showLists && (
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-4xl font-bold text-blue-600">
+                Films disponibles
+              </h1>
+            </div>
+          )}
 
           {showLists ? (
             selectedList ? (
