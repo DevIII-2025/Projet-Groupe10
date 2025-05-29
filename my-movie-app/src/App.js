@@ -81,6 +81,13 @@ function ProtectedApp() {
     return false;
   });
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  
+  const genres = [
+    "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary",
+    "Drama", "Family", "Fantasy", "History", "Horror", "Music", "Mystery",
+    "Romance", "Science Fiction", "Thriller", "TV Movie", "War", "Western"
+  ];
 
   const fetchMovies = (page, search, sort) => {
     setCurrentPage(page);
@@ -113,6 +120,11 @@ function ProtectedApp() {
     if (yearFilter && !isNaN(yearFilter)) {
       url += `&release_year=${yearFilter}`;
     }
+
+    // Add genre filters
+    selectedGenres.forEach(genre => {
+      url += `&genres=${encodeURIComponent(genre)}`;
+    });
 
     console.log(`Fetching movies with URL: ${url}, currentSearch: ${effectiveSearch}`);
 
@@ -297,6 +309,7 @@ function ProtectedApp() {
     setActiveFilters({
       year: yearFilter,
       sort: sortOption,
+      genres: selectedGenres,
     });
 
     setShowFilterDropdown(false);
@@ -308,8 +321,8 @@ function ProtectedApp() {
     setYearFilter("");
     setSortOption("");
     setSortBy("");
-    setActiveFilters({ year: "", sort: "" });
-
+    setSelectedGenres([]);
+    setActiveFilters({ year: "", sort: "", genres: [] });
     fetchMovies(1, null, "");
   };
 
@@ -487,14 +500,11 @@ function ProtectedApp() {
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();
-                                if (yearFilter) {
-                                  setActiveFilters({
-                                    ...activeFilters,
-                                    year: yearFilter,
-                                  });
-                                  setShowFilterDropdown(false);
-                                  fetchMovies(1, null, sortBy);
-                                }
+                                setActiveFilters(prev => ({
+                                  ...prev,
+                                  year: yearFilter
+                                }));
+                                fetchMovies(1, null, sortBy);
                               }
                             }}
                             className="w-full p-2 border rounded"
@@ -503,92 +513,60 @@ function ProtectedApp() {
 
                         <div className="mb-4">
                           <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Genres
+                          </label>
+                          <div className="max-h-40 overflow-y-auto">
+                            {genres.map((genre) => (
+                              <label key={genre} className="flex items-center space-x-2 mb-2">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedGenres.includes(genre)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedGenres([...selectedGenres, genre]);
+                                    } else {
+                                      setSelectedGenres(selectedGenres.filter(g => g !== genre));
+                                    }
+                                  }}
+                                  className="form-checkbox h-4 w-4 text-blue-600"
+                                />
+                                <span className="text-sm">{genre}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mb-4">
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
                             Trier par
                           </label>
-                          <div className="grid grid-cols-2 gap-2">
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                name="sortOption"
-                                value="year-asc"
-                                checked={sortOption === "year-asc"}
-                                onChange={(e) => setSortOption(e.target.value)}
-                                className="mr-2"
-                              />
-                              <span className="text-sm">Année (asc)</span>
-                            </label>
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                name="sortOption"
-                                value="year-desc"
-                                checked={sortOption === "year-desc"}
-                                onChange={(e) => setSortOption(e.target.value)}
-                                className="mr-2"
-                              />
-                              <span className="text-sm">Année (desc)</span>
-                            </label>
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                name="sortOption"
-                                value="alpha-asc"
-                                checked={sortOption === "alpha-asc"}
-                                onChange={(e) => setSortOption(e.target.value)}
-                                className="mr-2"
-                              />
-                              <span className="text-sm">A-Z</span>
-                            </label>
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                name="sortOption"
-                                value="alpha-desc"
-                                checked={sortOption === "alpha-desc"}
-                                onChange={(e) => setSortOption(e.target.value)}
-                                className="mr-2"
-                              />
-                              <span className="text-sm">Z-A</span>
-                            </label>
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                name="sortOption"
-                                value="review-asc"
-                                checked={sortOption === "review-asc"}
-                                onChange={(e) => setSortOption(e.target.value)}
-                                className="mr-2"
-                              />
-                              <span className="text-sm">Avis (asc)</span>
-                            </label>
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                name="sortOption"
-                                value="review-desc"
-                                checked={sortOption === "review-desc"}
-                                onChange={(e) => setSortOption(e.target.value)}
-                                className="mr-2"
-                              />
-                              <span className="text-sm">Avis (desc)</span>
-                            </label>
-                          </div>
+                          <select
+                            value={sortOption}
+                            onChange={(e) => setSortOption(e.target.value)}
+                            className="w-full p-2 border rounded"
+                          >
+                            <option value="">Sélectionner...</option>
+                            <option value="Année (croissant)">Année (croissant)</option>
+                            <option value="Année (décroissant)">Année (décroissant)</option>
+                            <option value="Titre (A-Z)">Titre (A-Z)</option>
+                            <option value="Titre (Z-A)">Titre (Z-A)</option>
+                            <option value="Avis (croissant)">Avis (croissant)</option>
+                            <option value="Avis (décroissant)">Avis (décroissant)</option>
+                          </select>
                         </div>
 
                         <div className="flex justify-between">
                           <button
-                            type="button"
-                            className="px-3 py-1 bg-gray-300 text-gray-800 rounded"
-                            onClick={clearFilters}
-                          >
-                            Réinitialiser
-                          </button>
-                          <button
-                            type="button"
-                            className="px-3 py-1 bg-blue-600 text-white rounded"
                             onClick={handleFilter}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                           >
                             Appliquer
+                          </button>
+                          <button
+                            onClick={clearFilters}
+                            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                          >
+                            Réinitialiser
                           </button>
                         </div>
                       </div>
@@ -654,20 +632,65 @@ function ProtectedApp() {
                       </button>
                     </span>
                   )}
+                  {activeFilters.genres && activeFilters.genres.length > 0 && (
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                      Genres: {activeFilters.genres.join(", ")}
+                      <button
+                        className="ml-1 text-blue-600"
+                        onClick={() => {
+                          // Clear the genre filter state
+                          setSelectedGenres([]);
+                          setActiveFilters({ ...activeFilters, genres: [] });
+
+                          
+                          let url = `/movies/?page=${currentPage}`;
+                          
+                          if (searchTerm) {
+                            url += `&search=${encodeURIComponent(searchTerm)}&startswith=true`;
+                          }
+                          
+                          if (sortBy) {
+                            url += `&ordering=${sortBy}`;
+                          }
+                          
+                          if (yearFilter && !isNaN(yearFilter)) {
+                            url += `&release_year=${yearFilter}`;
+                          }
+
+                          // Set loading state
+                          setIsLoading(true);
+
+                          // Fetch movies with remaining filters
+                          axiosInstance
+                            .get(url)
+                            .then((response) => {
+                              let results = response.data.results;
+
+                              if (searchTerm && searchTerm.trim() !== "") {
+                                const lowerSearch = searchTerm.toLowerCase();
+                                results = results.filter((movie) =>
+                                  movie.title.toLowerCase().startsWith(lowerSearch)
+                                );
+                              }
+
+                              setMovies(results);
+                              setTotalPages(Math.ceil(response.data.count / 24));
+                              setTotalMovies(response.data.count);
+                            })
+                            .catch((error) => {
+                              console.error("Erreur :", error);
+                              setError("Impossible de charger les films. Veuillez réessayer plus tard.");
+                            })
+                            .finally(() => setIsLoading(false));
+                        }}
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  )}
                   {activeFilters.sort && (
                     <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                      Tri:{" "}
-                      {activeFilters.sort === "year-asc"
-                        ? "Année (asc)"
-                        : activeFilters.sort === "year-desc"
-                        ? "Année (desc)"
-                        : activeFilters.sort === "alpha-asc"
-                        ? "A-Z"
-                        : activeFilters.sort === "alpha-desc"
-                        ? "Z-A"
-                        : activeFilters.sort === "review-asc"
-                        ? "Avis (asc)"
-                        : "Avis (desc)"}
+                      Tri: {sortOption}
                       <button
                         className="ml-1 text-blue-600"
                         onClick={() => {

@@ -78,6 +78,13 @@ class MovieViewSet(viewsets.ModelViewSet):
         if release_year:
             queryset = queryset.filter(release_year=release_year)
             
+        # Genre filter - require ALL selected genres to be present
+        genres = self.request.query_params.getlist('genres', [])
+        if genres:
+            # Create a Q object that requires ALL genres to be present
+            for genre in genres:
+                queryset = queryset.filter(genre__icontains=genre)
+            
         return queryset
 
     def get_serializer_context(self):
