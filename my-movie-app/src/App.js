@@ -82,6 +82,7 @@ function ProtectedApp() {
   });
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState([]);
+  const [ratingThreshold, setRatingThreshold] = useState("");
   
   const genres = [
     "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary",
@@ -119,6 +120,11 @@ function ProtectedApp() {
     // Add year filter if provided
     if (yearFilter && !isNaN(yearFilter)) {
       url += `&release_year=${yearFilter}`;
+    }
+
+    // Add rating filter if provided
+    if (ratingThreshold) {
+      url += `&min_rating=${ratingThreshold}`;
     }
 
     // Add genre filters
@@ -310,6 +316,7 @@ function ProtectedApp() {
       year: yearFilter,
       sort: sortOption,
       genres: selectedGenres,
+      rating: ratingThreshold
     });
 
     setShowFilterDropdown(false);
@@ -322,8 +329,28 @@ function ProtectedApp() {
     setSortOption("");
     setSortBy("");
     setSelectedGenres([]);
-    setActiveFilters({ year: "", sort: "", genres: [] });
-    fetchMovies(1, null, "");
+    setRatingThreshold("");
+    setActiveFilters({ year: "", sort: "", genres: [], rating: "" });
+    
+    // Build the URL without any filters
+    let url = `/movies/?page=1`;
+    
+    // Set loading state
+    setIsLoading(true);
+
+    // Fetch movies without any filters
+    axiosInstance
+      .get(url)
+      .then((response) => {
+        setMovies(response.data.results);
+        setTotalPages(Math.ceil(response.data.count / 24));
+        setTotalMovies(response.data.count);
+      })
+      .catch((error) => {
+        console.error("Erreur :", error);
+        setError("Impossible de charger les films. Veuillez réessayer plus tard.");
+      })
+      .finally(() => setIsLoading(false));
   };
 
   // Ajouter un gestionnaire de clic en dehors du menu
@@ -513,6 +540,24 @@ function ProtectedApp() {
 
                         <div className="mb-4">
                           <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Note minimale
+                          </label>
+                          <select
+                            value={ratingThreshold}
+                            onChange={(e) => setRatingThreshold(e.target.value)}
+                            className="w-full p-2 border rounded"
+                          >
+                            <option value="">Toutes les notes</option>
+                            <option value="1">1+ étoiles</option>
+                            <option value="2">2+ étoiles</option>
+                            <option value="3">3+ étoiles</option>
+                            <option value="4">4+ étoiles</option>
+                            <option value="5">5 étoiles</option>
+                          </select>
+                        </div>
+
+                        <div className="mb-4">
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
                             Genres
                           </label>
                           <div className="max-h-40 overflow-y-auto">
@@ -546,12 +591,12 @@ function ProtectedApp() {
                             className="w-full p-2 border rounded"
                           >
                             <option value="">Sélectionner...</option>
-                            <option value="Année (croissant)">Année (croissant)</option>
-                            <option value="Année (décroissant)">Année (décroissant)</option>
-                            <option value="Titre (A-Z)">Titre (A-Z)</option>
-                            <option value="Titre (Z-A)">Titre (Z-A)</option>
-                            <option value="Avis (croissant)">Avis (croissant)</option>
-                            <option value="Avis (décroissant)">Avis (décroissant)</option>
+                            <option value="year-asc">Année (croissant)</option>
+                            <option value="year-desc">Année (décroissant)</option>
+                            <option value="alpha-asc">Titre (A-Z)</option>
+                            <option value="alpha-desc">Titre (Z-A)</option>
+                            <option value="review-asc">Avis (croissant)</option>
+                            <option value="review-desc">Avis (décroissant)</option>
                           </select>
                         </div>
 
@@ -576,73 +621,19 @@ function ProtectedApp() {
 
                 <div className="mt-2 flex flex-wrap gap-2">
                   {activeFilters.year && (
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm animate-fadeIn">
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
                       Année: {activeFilters.year}
                       <button
                         className="ml-1 text-blue-600"
                         onClick={() => {
                           // Clear the year filter state first
                           setYearFilter("");
-                          setActiveFilters({ ...activeFilters, year: "" });
+                          setActiveFilters(prev => ({
+                            ...prev,
+                            year: ""
+                          }));
 
-                          // Force a new fetch without the year filter
-                          // We need to pass the current page and search parameters to maintain those
-                          const url = `/movies/?page=${currentPage}${
-                            searchTerm
-                              ? `&search=${encodeURIComponent(
-                                  searchTerm
-                                )}&startswith=true`
-                              : ""
-                          }${sortBy ? `&ordering=${sortBy}` : ""}`;
-
-                          // Set loading state to true to show loading indicator
-                          setIsLoading(true);
-
-                          axiosInstance
-                            .get(url)
-                            .then((response) => {
-                              let results = response.data.results;
-
-                              // Apply frontend filtering for search if needed
-                              if (searchTerm && searchTerm.trim() !== "") {
-                                const lowerSearch = searchTerm.toLowerCase();
-                                results = results.filter((movie) =>
-                                  movie.title
-                                    .toLowerCase()
-                                    .startsWith(lowerSearch)
-                                );
-                              }
-
-                              setMovies(results);
-                              setTotalPages(
-                                Math.ceil(response.data.count / 24)
-                              );
-                              setTotalMovies(response.data.count);
-                            })
-                            .catch((error) => {
-                              console.error("Erreur :", error);
-                              setError(
-                                "Impossible de charger les films. Veuillez réessayer plus tard."
-                              );
-                            })
-                            .finally(() => setIsLoading(false));
-                        }}
-                      >
-                        &times;
-                      </button>
-                    </span>
-                  )}
-                  {activeFilters.genres && activeFilters.genres.length > 0 && (
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                      Genres: {activeFilters.genres.join(", ")}
-                      <button
-                        className="ml-1 text-blue-600"
-                        onClick={() => {
-                          // Clear the genre filter state
-                          setSelectedGenres([]);
-                          setActiveFilters({ ...activeFilters, genres: [] });
-
-                          
+                          // Build the URL with remaining filters
                           let url = `/movies/?page=${currentPage}`;
                           
                           if (searchTerm) {
@@ -652,10 +643,15 @@ function ProtectedApp() {
                           if (sortBy) {
                             url += `&ordering=${sortBy}`;
                           }
-                          
-                          if (yearFilter && !isNaN(yearFilter)) {
-                            url += `&release_year=${yearFilter}`;
+
+                          if (ratingThreshold) {
+                            url += `&min_rating=${ratingThreshold}`;
                           }
+
+                          // Add remaining genre filters
+                          selectedGenres.forEach(genre => {
+                            url += `&genres=${encodeURIComponent(genre)}`;
+                          });
 
                           // Set loading state
                           setIsLoading(true);
@@ -688,9 +684,92 @@ function ProtectedApp() {
                       </button>
                     </span>
                   )}
+                  {activeFilters.genres && activeFilters.genres.length > 0 && (
+                    <>
+                      {activeFilters.genres.map((genre) => (
+                        <span key={genre} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                          Genre: {genre}
+                          <button
+                            className="ml-1 text-blue-600"
+                            onClick={() => {
+                              // Remove this specific genre from the filters
+                              const updatedGenres = selectedGenres.filter(g => g !== genre);
+                              setSelectedGenres(updatedGenres);
+                              setActiveFilters(prev => ({
+                                ...prev,
+                                genres: updatedGenres
+                              }));
+
+                              // Build the URL with remaining filters
+                              let url = `/movies/?page=${currentPage}`;
+                              
+                              if (searchTerm) {
+                                url += `&search=${encodeURIComponent(searchTerm)}&startswith=true`;
+                              }
+                              
+                              if (sortBy) {
+                                url += `&ordering=${sortBy}`;
+                              }
+                              
+                              if (yearFilter && !isNaN(yearFilter)) {
+                                url += `&release_year=${yearFilter}`;
+                              }
+
+                              if (ratingThreshold) {
+                                url += `&min_rating=${ratingThreshold}`;
+                              }
+
+                              // Add remaining genre filters
+                              updatedGenres.forEach(g => {
+                                url += `&genres=${encodeURIComponent(g)}`;
+                              });
+
+                              // Set loading state
+                              setIsLoading(true);
+
+                              // Fetch movies with remaining filters
+                              axiosInstance
+                                .get(url)
+                                .then((response) => {
+                                  let results = response.data.results;
+
+                                  if (searchTerm && searchTerm.trim() !== "") {
+                                    const lowerSearch = searchTerm.toLowerCase();
+                                    results = results.filter((movie) =>
+                                      movie.title.toLowerCase().startsWith(lowerSearch)
+                                    );
+                                  }
+
+                                  setMovies(results);
+                                  setTotalPages(Math.ceil(response.data.count / 24));
+                                  setTotalMovies(response.data.count);
+                                })
+                                .catch((error) => {
+                                  console.error("Erreur :", error);
+                                  setError("Impossible de charger les films. Veuillez réessayer plus tard.");
+                                })
+                                .finally(() => setIsLoading(false));
+                            }}
+                          >
+                            &times;
+                          </button>
+                        </span>
+                      ))}
+                    </>
+                  )}
                   {activeFilters.sort && (
                     <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                      Tri: {sortOption}
+                      Tri: {(() => {
+                        switch (activeFilters.sort) {
+                          case "year-asc": return "Année (croissant)";
+                          case "year-desc": return "Année (décroissant)";
+                          case "alpha-asc": return "Titre (A-Z)";
+                          case "alpha-desc": return "Titre (Z-A)";
+                          case "review-asc": return "Avis (croissant)";
+                          case "review-desc": return "Avis (décroissant)";
+                          default: return activeFilters.sort;
+                        }
+                      })()}
                       <button
                         className="ml-1 text-blue-600"
                         onClick={() => {
@@ -765,6 +844,71 @@ function ProtectedApp() {
                       </button>
                     </span>
                   )}
+
+                  {activeFilters.rating && (
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                      Note minimale: {activeFilters.rating}+ étoiles
+                      <button
+                        className="ml-1 text-blue-600"
+                        onClick={() => {
+                          // Clear the rating filter state
+                          setRatingThreshold("");
+                          setActiveFilters(prev => ({
+                            ...prev,
+                            rating: ""
+                          }));
+
+                          // Build the URL with remaining filters
+                          let url = `/movies/?page=${currentPage}`;
+                          
+                          if (searchTerm) {
+                            url += `&search=${encodeURIComponent(searchTerm)}&startswith=true`;
+                          }
+                          
+                          if (sortBy) {
+                            url += `&ordering=${sortBy}`;
+                          }
+                          
+                          if (yearFilter && !isNaN(yearFilter)) {
+                            url += `&release_year=${yearFilter}`;
+                          }
+
+                          // Add remaining genre filters
+                          selectedGenres.forEach(genre => {
+                            url += `&genres=${encodeURIComponent(genre)}`;
+                          });
+
+                          // Set loading state
+                          setIsLoading(true);
+
+                          // Fetch movies with remaining filters
+                          axiosInstance
+                            .get(url)
+                            .then((response) => {
+                              let results = response.data.results;
+
+                              if (searchTerm && searchTerm.trim() !== "") {
+                                const lowerSearch = searchTerm.toLowerCase();
+                                results = results.filter((movie) =>
+                                  movie.title.toLowerCase().startsWith(lowerSearch)
+                                );
+                              }
+
+                              setMovies(results);
+                              setTotalPages(Math.ceil(response.data.count / 24));
+                              setTotalMovies(response.data.count);
+                            })
+                            .catch((error) => {
+                              console.error("Erreur :", error);
+                              setError("Impossible de charger les films. Veuillez réessayer plus tard.");
+                            })
+                            .finally(() => setIsLoading(false));
+                        }}
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -783,7 +927,7 @@ function ProtectedApp() {
                   Précédent
                 </button>
 
-                <span className="mx-4">
+                <span className="mx-4 text-gray-800 dark:text-gray-200">
                   Page {currentPage} sur {totalPages}
                 </span>
 
@@ -875,7 +1019,7 @@ function ProtectedApp() {
                   Précédent
                 </button>
 
-                <span className="mx-4">
+                <span className="mx-4 text-gray-800 dark:text-gray-200">
                   Page {currentPage} sur {totalPages}
                 </span>
 

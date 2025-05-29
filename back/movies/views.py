@@ -78,6 +78,11 @@ class MovieViewSet(viewsets.ModelViewSet):
         if release_year:
             queryset = queryset.filter(release_year=release_year)
             
+        # Rating filter
+        min_rating = self.request.query_params.get('min_rating', None)
+        if min_rating:
+            queryset = queryset.filter(review_avg__gte=float(min_rating))
+            
         # Genre filter - require ALL selected genres to be present
         genres = self.request.query_params.getlist('genres', [])
         if genres:
