@@ -12,12 +12,15 @@ class Command(BaseCommand):
         for page in range(1, pages_needed + 1):
             movies = discover_movies(page=page)
             for movie_data in movies:
+                # Join genre names with commas
+                genres = ", ".join(movie_data.get('genre_names', ["Inconnu"]))
+                
                 Movie.objects.update_or_create(
                     title=movie_data['title'],
                     defaults={
                         'description': movie_data['overview'] or "Pas de description",
                         'release_year': movie_data['release_date'][:4] if movie_data['release_date'] else 0,
-                        'genre': "Inconnu",
+                        'genre': genres,
                         'poster_url': f"https://image.tmdb.org/t/p/w500{movie_data['poster_path']}" if movie_data['poster_path'] else ""
                     }
                 )

@@ -68,12 +68,12 @@ class MovieViewSet(viewsets.ModelViewSet):
             review_avg=models.Avg('reviews__rating')
         ).all()
         
-        # Handle search query
+        # Searchbar query
         search_query = self.request.query_params.get('search', None)
         if search_query:
             queryset = queryset.filter(title__istartswith=search_query)
             
-        # Handle release year filter
+        # Release year filter
         release_year = self.request.query_params.get('release_year', None)
         if release_year:
             queryset = queryset.filter(release_year=release_year)
