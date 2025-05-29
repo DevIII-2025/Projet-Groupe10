@@ -113,16 +113,26 @@ fg
 
 <!-- commandes déploiement production -->
 <!-- 1.	On your local or CI machine, run: -->
-cd C:\Users\Gaspard\OneDrive\Ephec\3T\Projet-Groupe10\
-git archive --format=tar.gz --output=main.tar.gz main
+cd C:\Users\Gaspard\OneDrive\Ephec\3T\Projet-Groupe10\back
+git archive --format=tar.gz --output=back.tar.gz main
 <!-- 2.	Send it to the server: -->
-scp main.tar.gz ovh2:/tmp/
+scp back.tar.gz ovh2:
 <!-- 3.	SSH into server and unpack: -->
 ssh ovh2
-cd Projet-Groupe10
-tar -xzf /tmp/main.tar.gz 
-cd back
+tar -xzf back.tar.gz -C Projet-Groupe10/back/
+cd Projet-Groupe10/back
 source venv/bin/activate 
 python manage.py makemigrations
 python manage.py migrate
 python manage.py runserver 
+
+<!-- deuxieme façon de déployer  -->
+<!-- 1.	On your local or CI machine, run: -->
+cd C:\Users\Gaspard\OneDrive\Ephec\3T\Projet-Groupe10\
+npm run build
+<!-- 2.	Send it to the server: -->
+scp -r build ovh2:
+<!-- 3.	SSH into server and unpack: -->
+ssh ovh2
+sudo cp -rv build /var/www/html/critiq/
+sudo chown -Rv www-data:www-data /var/www/html/critiq
