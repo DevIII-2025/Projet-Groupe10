@@ -64,13 +64,20 @@ class MovieViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        queryset = Movie.objects.all()
+        queryset = Movie.objects.annotate(
+            review_avg=models.Avg('reviews__rating')
+        ).all()
+        
+        # Handle search query
         search_query = self.request.query_params.get('search', None)
         if search_query:
-            queryset = queryset.filter(
-                Q(title__icontains=search_query) |
-                Q(description__icontains=search_query)
-            )
+            queryset = queryset.filter(title__istartswith=search_query)
+            
+        # Handle release year filter
+        release_year = self.request.query_params.get('release_year', None)
+        if release_year:
+            queryset = queryset.filter(release_year=release_year)
+            
         return queryset
 
     def get_serializer_context(self):
