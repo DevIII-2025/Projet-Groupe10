@@ -454,25 +454,18 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      console.log("Tentative de connexion avec:", username);
       const loginResponse = await login(username, password);
-      console.log("Réponse de login:", loginResponse.data);
 
       const userResponse = await getMe();
-      console.log("Réponse de getMe:", userResponse.data);
 
       setUser(userResponse.data);
       navigate("/");
     } catch (err) {
-      console.error("Erreur complète:", err);
       if (err.response) {
-        // Le serveur a répondu avec un statut d'erreur
         setError(err.response.data.detail || "Échec de la connexion. Vérifiez vos identifiants.");
       } else if (err.request) {
-        // La requête a été faite mais aucune réponse n'a été reçue
         setError("Impossible de contacter le serveur. Vérifiez votre connexion.");
       } else {
-        // Une erreur s'est produite lors de la configuration de la requête
         setError("Une erreur est survenue lors de la tentative de connexion.");
       }
     } finally {
@@ -556,8 +549,6 @@ const LogoutButton = () => {
       setUser(null); // Réinitialiser l'état utilisateur dans le contexte
       navigate('/login');
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
-      // En cas d'erreur, on force quand même la déconnexion côté client
       localStorage.removeItem('jwt_token');
       localStorage.removeItem('refresh_token');
       setUser(null);
@@ -596,9 +587,7 @@ const MovieActions = ({ movie, onUpdate }) => {
 
     const fetchLists = async () => {
         try {
-            console.log('Fetching lists...');
             const data = await getLists();
-            console.log('Lists received:', data);
             const userLists = data.filter(list => !list.is_system);
             setLists(userLists);
         } catch (err) {
@@ -611,9 +600,7 @@ const MovieActions = ({ movie, onUpdate }) => {
         setLoading(true);
         setError(null);
         try {
-            console.log('Liking movie:', movie.id);
             const result = await likeMovie(movie.id);
-            console.log('Like result:', result);
             
             // Mettre à jour l'état local
             const newStatus = {
@@ -639,9 +626,7 @@ const MovieActions = ({ movie, onUpdate }) => {
         setLoading(true);
         setError(null);
         try {
-            console.log('Marking movie as viewed:', movie.id);
             const result = await markMovieAsViewed(movie.id);
-            console.log('View result:', result);
             
             // Mettre à jour l'état local
             const newStatus = {
@@ -670,9 +655,7 @@ const MovieActions = ({ movie, onUpdate }) => {
         setLoading(true);
         setError(null);
         try {
-            console.log('Adding movie to list:', { listId: selectedList, movieId: movie.id, note });
             await addMovieToList(selectedList, movie.id, note);
-            console.log('Movie added successfully');
             setNote('');
             setSelectedList('');
             // Rafraîchir la liste des listes

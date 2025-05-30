@@ -21,7 +21,6 @@ const LoginForm = () => {
         username,
         password
       });
-      console.log('Réponse login:', response.data);
       localStorage.setItem('jwt_token', response.data.access_token);
       localStorage.setItem('refresh_token', response.data.refresh_token);
       const user = {

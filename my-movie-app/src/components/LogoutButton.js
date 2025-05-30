@@ -13,7 +13,6 @@ const LogoutButton = () => {
       setUser(null); // Réinitialiser l'état utilisateur dans le contexte
       navigate('/login');
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
       // En cas d'erreur, on force quand même la déconnexion côté client
       localStorage.removeItem('jwt_token');
       localStorage.removeItem('refresh_token');

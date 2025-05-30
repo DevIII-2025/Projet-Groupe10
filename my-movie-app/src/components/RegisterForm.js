@@ -42,7 +42,7 @@ const RegisterForm = () => {
             localStorage.setItem('verificationEmail', email);
             navigate('/verify-email', { state: { email } });
         } catch (err) {
-            console.error('Erreur lors de l\'inscription:', err);
+            //console.error('Erreur lors de l\'inscription:', err);
             if (err.response) {
                 const errorData = err.response.data;
                 let message = 'Une erreur est survenue lors de l\'inscription';

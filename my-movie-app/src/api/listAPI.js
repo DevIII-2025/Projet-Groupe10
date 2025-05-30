@@ -24,12 +24,12 @@ export const createList = async (name, description = '') => {
 // Récupérer toutes les listes de l'utilisateur
 export const getLists = async () => {
     try {
-        console.log('Fetching lists...');
+        // console.log('Fetching lists...');
         const response = await axiosInstance.get('/lists/');
-        console.log('Lists received:', response.data);
+        // console.log('Lists received:', response.data);
         return response.data;
     } catch (error) {
-        console.error('Error fetching lists:', error.response?.data || error.message);
+        // console.error('Error fetching lists:', error.response?.data || error.message);
         throw new Error(error.response?.data?.detail || 'Erreur lors du chargement des listes');
     }
 };
@@ -40,7 +40,7 @@ export const getList = async (listId) => {
         const response = await axiosInstance.get(`/lists/${listId}/`);
         return response.data;
     } catch (error) {
-        console.error('Error fetching list:', error.response?.data || error.message);
+        // console.error('Error fetching list:', error.response?.data || error.message);
         if (error.response && error.response.status === 404) {
             return { movies: [] }; // Retourne un objet de liste vide pour les 404
         }
@@ -57,7 +57,7 @@ export const updateList = async (listId, name, description = '') => {
         });
         return response.data;
     } catch (error) {
-        console.error('Error updating list:', error.response?.data || error.message);
+        // console.error('Error updating list:', error.response?.data || error.message);
         throw new Error(error.response?.data?.detail || 'Erreur lors de la mise à jour de la liste');
     }
 };
@@ -68,7 +68,7 @@ export const deleteList = async (listId) => {
         await axiosInstance.delete(`/lists/${listId}/`);
         return true;
     } catch (error) {
-        console.error('Error deleting list:', error.response?.data || error.message);
+        // console.error('Error deleting list:', error.response?.data || error.message);
         throw new Error(error.response?.data?.detail || 'Erreur lors de la suppression de la liste');
     }
 };
@@ -76,19 +76,19 @@ export const deleteList = async (listId) => {
 // Ajouter un film à une liste
 export const addMovieToList = async (listId, movieId, note = '') => {
     try {
-        console.log('Adding movie to list:', { listId, movieId, note });
+        // console.log('Adding movie to list:', { listId, movieId, note });
         const response = await axiosInstance.post(`/lists/${listId}/add_movie/`, {
             movie_id: movieId,
             note
         });
-        console.log('Movie added successfully:', response.data);
+        // console.log('Movie added successfully:', response.data);
         return {
             data: response.data.data,
             alreadyInList: response.data.already_in_list,
             message: response.data.message
         };
     } catch (error) {
-        console.error('Error adding movie to list:', error.response?.data || error.message);
+        // console.error('Error adding movie to list:', error.response?.data || error.message);
         const errorMessage = error.response?.data?.detail || 
                            error.response?.data?.error || 
                            'Erreur lors de l\'ajout du film à la liste';
@@ -104,7 +104,7 @@ export const removeMovieFromList = async (listId, movieId) => {
         });
         return true;
     } catch (error) {
-        console.error('Error removing movie from list:', error.response?.data || error.message);
+        // console.error('Error removing movie from list:', error.response?.data || error.message);
         throw new Error(error.response?.data?.detail || 'Erreur lors du retrait du film de la liste');
     }
 };
@@ -115,7 +115,7 @@ export const likeMovie = async (movieId) => {
         const response = await axiosInstance.post(`/movies/${movieId}/like/`);
         return response.data;
     } catch (error) {
-        console.error('Error liking movie:', error.response?.data || error.message);
+        // console.error('Error liking movie:', error.response?.data || error.message);
         throw new Error(error.response?.data?.detail || 'Erreur lors du like du film');
     }
 };
@@ -126,7 +126,7 @@ export const markMovieAsViewed = async (movieId) => {
         const response = await axiosInstance.post(`/movies/${movieId}/view/`);
         return response.data;
     } catch (error) {
-        console.error('Error marking movie as viewed:', error.response?.data || error.message);
+        // console.error('Error marking movie as viewed:', error.response?.data || error.message);
         throw new Error(error.response?.data?.detail || 'Erreur lors du marquage comme vu');
     }
 }; 

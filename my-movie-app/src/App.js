@@ -44,7 +44,7 @@ const customStyles = {
 
 function ProtectedApp() {
   const { user, setUser, loading } = useAuth();
-  console.log("USER CONTEXT :", user);
+  const navigate = useNavigate();
   const [movies, setMovies] = useState([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -380,10 +380,21 @@ function ProtectedApp() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-300 flex items-center">
-                <span className="mr-2">🎬</span>
-                CritiQ
-              </h1>
+              <button
+                className="flex items-center focus:outline-none"
+                onClick={() => {
+                  setShowLists(false);
+                  setSelectedList(null);
+                  navigate("/");
+                }}
+                style={{ background: "none", border: "none", padding: 0, margin: 0, cursor: "pointer" }}
+                aria-label="Accueil CritiQ"
+              >
+                <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-300 flex items-center">
+                  <span className="mr-2">🎬</span>
+                  CritiQ
+                </h1>
+              </button>
             </div>
             <div className="flex items-center space-x-4">
               <button

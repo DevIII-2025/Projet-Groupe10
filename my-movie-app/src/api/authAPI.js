@@ -9,13 +9,13 @@ import axiosInstance from './axiosConfig';
 
 export const login = async (username, password) => {
   try {
-    console.log('Attempting login...');
+    // console.log('Attempting login...');
     const response = await axiosInstance.post('/users/login/', { 
       username, 
       password 
     });
     
-    console.log('Login successful, storing tokens...');
+    // console.log('Login successful, storing tokens...');
     // Stocker les tokens
     const { access_token, refresh_token } = response.data;
     if (access_token) {
@@ -26,34 +26,34 @@ export const login = async (username, password) => {
     }
     return response;
   } catch (error) {
-    console.error('Login error:', error.response?.data || error.message);
+    // console.error('Login error:', error.response?.data || error.message);
     throw error;
   }
 };
 
 export const getMe = async () => {
   try {
-    console.log('Fetching user profile...');
+    // console.log('Fetching user profile...');
     const response = await axiosInstance.get('/users/me/');
-    console.log('User profile fetched successfully');
+    // console.log('User profile fetched successfully');
     return response;
   } catch (error) {
-    console.error('Error fetching user profile:', error.response?.data || error.message);
+    // console.error('Error fetching user profile:', error.response?.data || error.message);
     throw error;
   }
 };
 
 export const logout = async () => {
   try {
-    console.log('Attempting logout...');
+    // console.log('Attempting logout...');
     const response = await axiosInstance.post('/users/logout/');
-    console.log('Logout successful, removing tokens...');
+    // console.log('Logout successful, removing tokens...');
     // Supprimer les tokens
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('refresh_token');
     return response;
   } catch (error) {
-    console.error('Logout error:', error.response?.data || error.message);
+    // console.error('Logout error:', error.response?.data || error.message);
     // Même en cas d'erreur, on supprime les tokens
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('refresh_token');

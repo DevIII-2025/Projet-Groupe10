@@ -52,7 +52,7 @@ DATABASE_NAME = os.getenv('DATABASE_NAME')
 
 
 # DEBUG à désactiver en prod
-DEBUG = True
+DEBUG = False
 
 # ALLOWED_HOSTS = [
 #     'localhost',
@@ -145,6 +145,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'EXCEPTION_HANDLER': 'backend.exceptions.custom_exception_handler',
 }
 
 # Configuration de SimpleJWT
@@ -221,8 +222,8 @@ STATIC_URL = 'static/'
 # Clé par défaut des champs auto
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Envoi d’emails avec SMTP MailerSend
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Envoi d'emails avec SMTP MailerSend
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.mailersend.net")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
