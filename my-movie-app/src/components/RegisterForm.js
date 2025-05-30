@@ -45,8 +45,24 @@ const RegisterForm = () => {
             console.error('Erreur lors de l\'inscription:', err);
             if (err.response) {
                 const errorData = err.response.data;
-                const firstError = Object.values(errorData)[0];
-                setError(Array.isArray(firstError) ? firstError[0] : firstError);
+                let message = 'Une erreur est survenue lors de l\'inscription';
+                if (typeof errorData === 'string') {
+                    message = errorData;
+                } else if (Array.isArray(errorData)) {
+                    message = errorData.join(' ');
+                } else if (typeof errorData === 'object' && errorData !== null) {
+                    // Récupère tous les messages d'erreur de chaque champ
+                    message = Object.entries(errorData)
+                        .map(([field, val]) => {
+                            if (Array.isArray(val)) {
+                                return val.map(v => `${field}: ${v}`).join(' ');
+                            } else {
+                                return `${field}: ${val}`;
+                            }
+                        })
+                        .join(' ');
+                }
+                setError(message);
             } else if (err.request) {
                 setError('Impossible de contacter le serveur. Vérifiez votre connexion.');
             } else {

@@ -32,7 +32,22 @@ const LoginForm = () => {
       setError('');
       navigate('/');
     } catch (error) {
-      setError(error.response?.data?.detail ||error.response?.data?.message ||'Une erreur est survenue lors de la connexion');
+      let message = 'Une erreur est survenue lors de la connexion';
+      if (error.response) {
+        const errorData = error.response.data;
+        if (typeof errorData === 'string') {
+          message = errorData;
+        } else if (Array.isArray(errorData)) {
+          message = errorData.join(' ');
+        } else if (typeof errorData === 'object' && errorData !== null) {
+          message = Object.values(errorData)
+            .map(val => Array.isArray(val) ? val.join(' ') : val)
+            .join(' ');
+        }
+      } else if (error.request) {
+        message = 'Impossible de contacter le serveur. Vérifiez votre connexion.';
+      }
+      setError(message);
     } finally {
       setIsLoading(false);
     }
